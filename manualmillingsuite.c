@@ -3,22 +3,43 @@
 #include <math.h>
 #include "ghcommon.h"
 
-int print_menu (void)
+double find_mod(double a, double b)
+{
+    double mod;
+
+    if (a < 0)
+        mod = -a;
+    else
+        mod = a;
+    if (b < 0)
+        b = -b;
+
+    while (mod >= b)
+        mod = mod - b;
+
+    if (a < 0)
+        return -mod;
+
+    return mod;
+}
+
+int print_menu(void)
 {
     int choice;
 
     printf("\n\n\n\t\t*** Main Menu ***\n");
     printf("\n\t<1> Absolute X-Y to Wheel Turns");
-    printf("\n\t<2> Absolute X-Y to Relative Angle & Distance");
-    printf("\n\t<3> Angle");
-    printf("\n\t<4> Radius");
-    printf("\n\t<5> Drill Manifold Holes");
+    printf("\n\t<2> Wheel turns to Distance");
+    printf("\n\t<3> Relative Angle & Distance to Absolute X-Y");
+    printf("\n\t<4> Angle");
+    printf("\n\t<5> Radius");
+    printf("\n\t<6> Manifold");
     printf("\n\n\t<0> Quit");
 
-    do 
+    do
     {
-        choice = get_int("\n\nEnter Selection :");
-    } while (choice < 0 || choice > 5);
+        choice = get_int("\n\nEnter Selection: ");
+    } while (choice < 0 || choice > 6);
 
     return choice;
 }
@@ -37,6 +58,22 @@ char *wheel_position(double x, double y, double dt)
     sprintf_string(&st, "(%dT + %d, %dT + %d)", xt, xr, yt, yr);
 
     return st;
+}
+
+void print_xy_position(double x, double y, double dt, int linecount)
+{
+    char *wp = NULL;
+
+    if (x < 0.0 || y < 0.0)
+    {
+        printf("\n\n#%d Position\tError... Outside of 0,0 bounds!", linecount);
+    }
+    else
+    {
+        wp = wheel_position(x, y, dt);
+        printf("\n\n#%d Position\tX = %3.4fin %3.2fmm   Y = %3.4fin %3.2fmm   %s", linecount, x, x / 0.03937008, y, y / 0.03937008, wp);
+        free_malloc(wp);
+    }
 }
 
 void print_layout(void)
@@ -62,7 +99,7 @@ int get_english_or_metric(void)
 
     while (TRUE)
     {
-        count = get_string(&s, "\n\nEnter <E>nglish or <M>etric: ");
+        count = get_string(&s, "\n\nEnter <I>nches or <M>illimeters: ");
 
         if (count == 0)
         {
@@ -70,7 +107,7 @@ int get_english_or_metric(void)
             continue;
         }
 
-        if (s[0] == 'E' || s[0] == 'e')
+        if (s[0] == 'I' || s[0] == 'i')
         {
             free_malloc(s);
             metric_flag = FALSE;
@@ -90,13 +127,55 @@ int get_english_or_metric(void)
     return metric_flag;
 }
 
+int get_lcr(void)
+{
+    int count, lcr;
+    char *s = NULL;
+
+    while (TRUE)
+    {
+        count = get_string(&s, "\n\nEnter <L>eft <C>enter or <R>ight Side of Angle Line: ");
+
+        if (count == 0)
+        {
+            free_malloc(s);
+            continue;
+        }
+
+        if (s[0] == 'L' || s[0] == 'l')
+        {
+            free_malloc(s);
+            lcr = 0;
+            break;
+        }
+
+        if (s[0] == 'C' || s[0] == 'c')
+        {
+            free_malloc(s);
+            lcr = 1;
+            break;
+        }
+
+        if (s[0] == 'R' || s[0] == 'r')
+        {
+            free_malloc(s);
+            lcr = 2;
+            break;
+        }
+
+        free_malloc(s);
+    }
+
+    return lcr;
+}
+
 void abs_xy_wheel(double dt, int metric_flag)
 {
     double sx, sy;
     char *wp = NULL;
 
-    sx = get_fraction("\nEnter Starting X Position: ");
-    sy = get_fraction("\nEnter Starting Y Position: ");
+    sx = fabs(get_fraction("\nEnter X Position: "));
+    sy = fabs(get_fraction("\nEnter Y Position: "));
 
     if (metric_flag)
     {
@@ -109,13 +188,26 @@ void abs_xy_wheel(double dt, int metric_flag)
     free_malloc(wp);
 }
 
+void wheel_distance(double dt, int metric_flag)
+{
+    double wt, th, d;
+
+    wt = fabs((double)get_int("\nEnter # Wheel Turns: "));
+    th = fabs(get_double("\nEnter # of Thousandths: ") / 1000.0);
+
+    wt = wt * dt;
+    d = wt + th;
+
+    printf("\n\nDistance :\t%3.4fin %3.2fmm", d, d / 0.03937008);
+}
+
 void rel_xy_wheel(double dt, int metric_flag)
 {
     double sx, sy, a, ra, d, dx, dy;
     char *wp = NULL;
 
-    sx = get_fraction("\nEnter Starting X Position: ");
-    sy = get_fraction("\nEnter Starting Y Position: ");
+    sx = fabs(get_fraction("\nEnter Starting X Position: "));
+    sy = fabs(get_fraction("\nEnter Starting Y Position: "));
 
     if (metric_flag)
     {
@@ -129,7 +221,7 @@ void rel_xy_wheel(double dt, int metric_flag)
 
     while (TRUE)
     {
-        d = get_fraction("\n\n\nEnter Distance (0 to Return to Menu): ");
+        d = fabs(get_fraction("\n\n\nEnter Distance (0 to Return to Menu): "));
         if (d <= 0.0)
             break;
 
@@ -138,7 +230,7 @@ void rel_xy_wheel(double dt, int metric_flag)
             d = d * 0.03937008;
         }
 
-        a = get_fraction("\nEnter Angle: ");
+        a = find_mod(get_fraction("\nEnter Angle: "),360.0);
 
         ra = PI * a / 180.0;
 
@@ -160,7 +252,7 @@ void rel_xy_wheel(double dt, int metric_flag)
     }
 }
 
-void manifold_wheel (double dt, int metric_flag)
+void manifold(double dt, int metric_flag)
 {
     double radius;
     double centerxoffset;
@@ -174,18 +266,18 @@ void manifold_wheel (double dt, int metric_flag)
     double radians;
     int linecount;
     int nh;
-    char *wp = NULL;
 
     radius = fabs(get_fraction("\nEnter Radius: "));
     nh = get_int("\nEnter Number of Holes: ");
 
-    if (nh < 1) return;
-    
+    if (nh < 1)
+        return;
+
     angleinc = 360.0 / (double)nh;
 
     centerxoffset = fabs(get_fraction("\nEnter Center X: "));
     centeryoffset = fabs(get_fraction("\nEnter Center Y: "));
-    startangle = get_fraction("\nEnter Start Angle: ");
+    startangle = find_mod(get_fraction("\nEnter Start Angle: "), 360.0);
     endangle = startangle + 360.0;
 
     if (metric_flag)
@@ -206,20 +298,99 @@ void manifold_wheel (double dt, int metric_flag)
 
         linecount++;
 
-        
-        if (x < 0.0 || y < 0.0)
-        {
-            printf("\n\n#%d Position\tError... Outside of 0,0 bounds!", linecount);
-            continue;
-        }
-
-        wp = wheel_position(x, y, dt);
-        printf("\n\n#%d Position\tX = %3.4fin %3.2fmm   Y = %3.4fin %3.2fmm   %s", linecount, x, x / 0.03937008, y, y / 0.03937008, wp);
-        free_malloc(wp);
+        print_xy_position(x, y, dt, linecount);
     }
 }
 
-void radius_wheel (double dt, int metric_flag)
+void angle(double dt, int metric_flag)
+{
+    double tool_radius;
+    double centerxoffset;
+    double centeryoffset;
+    double angle;
+    double tangle;
+    double distance;
+    int steps;
+    int step;
+    double leftover;
+    int lcr;
+    double inc;
+    double x, y;
+    double radians;
+    double tradians;
+    int linecount = 0;
+
+    centerxoffset = fabs(get_fraction("\nEnter Start X: "));
+    centeryoffset = fabs(get_fraction("\nEnter Start Y: "));
+    angle = find_mod(get_fraction("\nEnter Angle: "), 360.0);
+
+    do
+    {
+        distance = fabs(get_fraction("\nEnter Total Distance: "));
+        inc = fabs(get_fraction("\nEnter Step Distance: "));
+    } while (inc >= distance);
+
+    tool_radius = fabs(get_fraction("\nEnter Tool Diameter: ") / 2.0);
+
+    lcr = get_lcr();
+
+    if (metric_flag)
+    {
+        centerxoffset = centerxoffset * 0.03937008;
+        centeryoffset = centeryoffset * 0.03937008;
+        distance = distance * 0.03937008;
+        inc = inc * 0.03937008;
+        tool_radius = tool_radius * 0.03937008;
+    }
+
+    switch (lcr)
+    {
+        case 0:
+            tangle = find_mod(angle - 90, 360.0);
+            tradians = deg_to_rad(tangle);
+            x = centerxoffset + tool_radius * sin(tradians);
+            y = centeryoffset - tool_radius * cos(tradians);
+            break;
+        case 1:
+            x = centerxoffset;
+            y = centeryoffset;
+            break;
+        case 2:
+            tangle = find_mod(angle + 90, 360.0);
+            tradians = deg_to_rad(tangle);
+            x = centerxoffset + tool_radius * sin(tradians);
+            y = centeryoffset - tool_radius * cos(tradians);
+            break;
+    }
+
+    steps = (int)floor(distance / inc);
+    leftover = ((distance / inc) - trunc(distance / inc)) * inc;
+    radians = deg_to_rad(angle);
+
+    print_xy_position(x, y, dt, linecount);
+
+    for (step = 0; step < steps; step++)
+    {
+        x = x + inc * sin(radians);
+        y = y - inc * cos(radians);
+
+        linecount++;
+
+        print_xy_position(x, y, dt, linecount);
+    }
+
+    if (leftover > 0.0)
+    {
+        x = x + leftover * sin(radians);
+        y = y - leftover * cos(radians);
+
+        linecount++;
+
+        print_xy_position(x, y, dt, linecount);
+    }
+}
+
+void radius(double dt, int metric_flag)
 {
     double radius;
     double tool_radius;
@@ -236,10 +407,8 @@ void radius_wheel (double dt, int metric_flag)
     int linecount;
     int nh;
     int c;
-    char *wp = NULL;
 
-
-    do 
+    do
     {
         c = get_int("\nEnter <1> Concave or <2> Convex: ");
     } while (c < 0 || c > 2);
@@ -250,17 +419,18 @@ void radius_wheel (double dt, int metric_flag)
         tool_radius = fabs(get_fraction("\nEnter Tool Diameter: ") / 2.0);
     } while ((radius < tool_radius) && (c = 1));
 
-    arc_length = fabs(get_fraction("\nEnter Arc Length: "));
- 
+    arc_length = fabs(get_fraction("\nEnter Step Arc Length: "));
+
     centerxoffset = fabs(get_fraction("\nEnter Center X: "));
     centeryoffset = fabs(get_fraction("\nEnter Center Y: "));
-    startangle = get_fraction("\nEnter Start Angle: ");
-    endangle = get_fraction("\nEnter End Angle: ");
+    startangle = find_mod(get_fraction("\nEnter Start Angle: "), 360.0);
+    endangle = find_mod(get_fraction("\nEnter End Angle: "), 360.0);
+    if (endangle == 0.0) endangle = 360.0;
 
-    if (c==1)
-        radius -= tool_radius;
-    else
-        radius += tool_radius;
+    if (endangle < startangle)
+    {
+        endangle = endangle + 360.0;
+    }
 
     if (metric_flag)
     {
@@ -271,8 +441,13 @@ void radius_wheel (double dt, int metric_flag)
     }
 
     angleinc = arc_length / (PI * radius) * 360.0;
-    
-    printf("\n\nAngle Increment = %3.1f",angleinc);
+
+    if (c == 1)
+        radius -= tool_radius;
+    else
+        radius += tool_radius;
+
+    printf("\n\nAngle Increment = %3.1f", angleinc);
 
     linecount = 0;
 
@@ -285,19 +460,11 @@ void radius_wheel (double dt, int metric_flag)
 
         linecount++;
 
-        if (x < 0.0 || y < 0.0)
-        {
-            printf("\n\n#%d Position\tError... Outside of 0,0 bounds!", linecount);
-            continue;
-        }
-
-        wp = wheel_position(x, y, dt);
-        printf("\n\n#%d Position\tX = %3.4fin %3.2fmm   Y = %3.4fin %3.2fmm   %s", linecount, x, x / 0.03937008, y, y / 0.03937008, wp);
-        free_malloc(wp);
+        print_xy_position(x, y, dt, linecount);
     }
 }
 
-int main (void)
+int main(void)
 {
     int choice, metric_flag;
     double dt;
@@ -307,12 +474,11 @@ int main (void)
     printf("\n\n");
 
     print_layout();
-    
-    dt = get_fraction("\nEnter Distance Per Turn of Wheel in Inches: ");
-    if (dt <= 0.0) return SUCCESS;
+
+    dt = fabs(get_fraction("\nEnter Distance Per Turn of Wheel in Inches: "));
 
     metric_flag = get_english_or_metric();
-    
+
     while (TRUE)
     {
         choice = print_menu();
@@ -324,17 +490,23 @@ int main (void)
             case 0:
                 return SUCCESS;
             case 1:
-                abs_xy_wheel(dt,metric_flag);
+                abs_xy_wheel(dt, metric_flag);
                 break;
             case 2:
-                rel_xy_wheel(dt,metric_flag);
+                wheel_distance(dt, metric_flag);
+                break;
+            case 3:
+                rel_xy_wheel(dt, metric_flag);
                 break;
             case 4:
-                radius_wheel(dt,metric_flag);
+                angle(dt, metric_flag);
                 break;
             case 5:
-                manifold_wheel(dt,metric_flag);
+                radius(dt, metric_flag);
                 break;
-       }
+            case 6:
+                manifold(dt, metric_flag);
+                break;
+        }
     }
 }
