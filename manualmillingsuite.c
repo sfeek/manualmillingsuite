@@ -230,7 +230,7 @@ void rel_xy_wheel(double dt, int metric_flag)
             d = d * 0.03937008;
         }
 
-        a = find_mod(get_fraction("\nEnter Angle: "),360.0);
+        a = find_mod(get_fraction("\nEnter Angle: "), 360.0);
 
         ra = PI * a / 180.0;
 
@@ -345,22 +345,22 @@ void angle(double dt, int metric_flag)
 
     switch (lcr)
     {
-        case 0:
-            tangle = find_mod(angle - 90, 360.0);
-            tradians = deg_to_rad(tangle);
-            x = centerxoffset + tool_radius * sin(tradians);
-            y = centeryoffset - tool_radius * cos(tradians);
-            break;
-        case 1:
-            x = centerxoffset;
-            y = centeryoffset;
-            break;
-        case 2:
-            tangle = find_mod(angle + 90, 360.0);
-            tradians = deg_to_rad(tangle);
-            x = centerxoffset + tool_radius * sin(tradians);
-            y = centeryoffset - tool_radius * cos(tradians);
-            break;
+    case 0:
+        tangle = find_mod(angle - 90, 360.0);
+        tradians = deg_to_rad(tangle);
+        x = centerxoffset + tool_radius * sin(tradians);
+        y = centeryoffset - tool_radius * cos(tradians);
+        break;
+    case 1:
+        x = centerxoffset;
+        y = centeryoffset;
+        break;
+    case 2:
+        tangle = find_mod(angle + 90, 360.0);
+        tradians = deg_to_rad(tangle);
+        x = centerxoffset + tool_radius * sin(tradians);
+        y = centeryoffset - tool_radius * cos(tradians);
+        break;
     }
 
     steps = (int)floor(distance / inc);
@@ -425,7 +425,8 @@ void radius(double dt, int metric_flag)
     centeryoffset = fabs(get_fraction("\nEnter Center Y: "));
     startangle = find_mod(get_fraction("\nEnter Start Angle: "), 360.0);
     endangle = find_mod(get_fraction("\nEnter End Angle: "), 360.0);
-    if (endangle == 0.0) endangle = 360.0;
+    if (endangle == 0.0)
+        endangle = 360.0;
 
     if (endangle < startangle)
     {
@@ -487,26 +488,26 @@ int main(void)
 
         switch (choice)
         {
-            case 0:
-                return SUCCESS;
-            case 1:
-                abs_xy_wheel(dt, metric_flag);
-                break;
-            case 2:
-                wheel_distance(dt, metric_flag);
-                break;
-            case 3:
-                rel_xy_wheel(dt, metric_flag);
-                break;
-            case 4:
-                angle(dt, metric_flag);
-                break;
-            case 5:
-                radius(dt, metric_flag);
-                break;
-            case 6:
-                manifold(dt, metric_flag);
-                break;
+        case 0:
+            return SUCCESS;
+        case 1:
+            abs_xy_wheel(dt, metric_flag);
+            break;
+        case 2:
+            wheel_distance(dt, metric_flag);
+            break;
+        case 3:
+            rel_xy_wheel(dt, metric_flag);
+            break;
+        case 4:
+            angle(dt, metric_flag);
+            break;
+        case 5:
+            radius(dt, metric_flag);
+            break;
+        case 6:
+            manifold(dt, metric_flag);
+            break;
         }
     }
 }
