@@ -161,6 +161,29 @@ int sprintf_string(char **s, char *fmt, ...)
 	return SUCCESS;
 }
 
+int print_padded_string(char *ins, size_t count)
+{
+	int i,e;
+
+	char *st;
+
+	st = strdup(ins);
+	
+	if (ins == NULL)
+		return FAIL_PARAMETER;
+
+	e = (int)(count - strlen(st));
+
+	if (e < 0)
+		st[count] = 0;
+	
+	printf("%s",st);
+
+	for (i=0;i < e; i++) printf(" ");
+
+	return SUCCESS;
+}
+
 int replace_string(char **s, const char *oldW, const char *newW)
 {
 	char *str;
@@ -406,6 +429,37 @@ fraction decimal_to_fraction(double value, double accuracy)
 	f.d = denominator;
 
 	return f;
+}
+
+void fraction_int_string(char **s, int i, int n, int d)
+{
+    char sign = ' ';
+    char *ts = NULL;
+
+    if (d == 0)
+        return;
+
+	n = d * i + n;
+   
+    if (n >= d)
+    {
+        i = n / d;
+        n = n % d;
+    }
+
+    if (n == 0)
+        sprintf_string(&ts,"%c%d",sign,i); 
+    else 
+    {
+        if (i == 0)
+            sprintf_string(&ts,"%c%d/%d", sign, n, d);
+        else
+            sprintf_string(&ts,"%c%d %d/%d", sign, i, n, d);
+    }
+
+    *s = ts;
+
+    return;
 }
 
 double fraction_to_decimal(fraction f)

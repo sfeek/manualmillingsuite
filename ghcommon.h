@@ -41,6 +41,8 @@ size_t double_to_string(char **, double, int);
 int sub_string(char **, size_t, size_t);
 int left_string(char **str, size_t s);
 int right_string(char **str, size_t s);
+int print_padded_string(char *, size_t);
+void fraction_int_string(char **, int, int, int);
 
 int csv_parse(char ***, char *, size_t *);
 void cleanup_csv_strings(char **, size_t);
@@ -54,7 +56,7 @@ double get_double(const char *);
 int get_int(const char *);
 double deg_to_rad(double);
 double rad_to_deg(double);
-double mod(double a,double m);
+double mod(double a, double m);
 double normalize_angle_360(double);
 double normalize_angle_180(double);
 int angle_in_range(double, double, double);
