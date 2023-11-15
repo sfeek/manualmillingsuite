@@ -34,12 +34,13 @@ int print_menu(void)
     printf("\n\t<4> Angle");
     printf("\n\t<5> Radius");
     printf("\n\t<6> Manifold");
+    printf("\n\t<7> Decimal Equivalence");
     printf("\n\n\t<0> Quit");
 
     do
     {
         choice = get_int("\n\nEnter Selection: ");
-    } while (choice < 0 || choice > 6);
+    } while (choice < 0 || choice > 7);
 
     return choice;
 }
@@ -465,6 +466,142 @@ void radius(double dt, int metric_flag)
     }
 }
 
+void print_fraction(double v)
+{
+    fraction fract;
+    double i, f;
+
+    f = modf(fabs(v), &i);
+
+    if (v < 0)
+        i = -i;
+
+    fract = decimal_to_fraction(f, 1e-6);
+
+    if (fract.n == 0)
+    {
+        printf("%d", (int)i);
+        return;
+    }
+
+    if (i <= -1.0 || i >= 1.0)
+        printf("%d %d/%d", (int)i, fract.n, fract.d);
+    else
+        printf("%d/%d", fract.n, fract.d);
+}
+
+void lookup_drill_size(double v)
+{    
+    char line[20];
+    char sz[20] = "";
+    char last_sz[20] = "";
+    double value;
+    int flag = 1;
+
+    FILE *file = fopen("drillsize.csv", "r");
+
+    if (file != NULL)
+    {
+        while (fgets(line, 20, file) != NULL)
+        {
+            sscanf(line, "%lf,%s", &value, sz);
+            if (value >= (v - v * 0.05) && value <= (v + v * 0.05))
+            {
+                printf("  %3.4f : %s (%3.4f)\n", value, sz, value - v);
+                flag = 0;
+            }
+        }
+    }
+    
+    if (file)
+        fclose(file);
+
+    if (flag)
+        printf("\n  Drill Size Not Found!");
+
+    return;
+}
+
+int print_surrounding_fractions(double v, int dnom)
+{
+    double i, f, nf, i1, f1;
+    char *st = NULL;
+
+    if (dnom == 0)
+        return FAIL_NUMBER;
+
+    f = modf(v, &i);
+    nf = f / (1 / (double)dnom);
+    f1 = modf(nf, &i1);
+
+    //if (float_compare(f, i1 / (double)dnom, 1e-6)) return SUCCESS;
+
+    sprintf_string(&st,"Nearest 1/%d Fractions: ", dnom);
+
+    printf("\n%25s", st);
+    print_fraction(i + i1 / (double)dnom);
+    printf(" (%3.4f)", i1 / (double)dnom - f);
+    printf(" & ");
+    print_fraction(i + (i1 + 1.0) / (double)dnom);
+    printf(" (%3.4f)", (i1 + 1.0) / (double)dnom - f);
+
+    free_malloc(st);
+    
+    return SUCCESS;
+}
+
+void decimal_equivalence (int metric_flag)
+{
+    double v;
+    double f;
+    double mm;
+    double f64;
+    double nf;
+    double df;
+
+    int n ,i;
+
+    fraction fract;
+    char *s = NULL;
+    size_t count;
+
+    while (TRUE)
+    {
+        v = get_fraction("\nEnter a decimal or fractional number or 0 to quit: ");
+
+        v = fabs(v);
+
+        if (v == 0.0)
+            return;
+
+        if (metric_flag)
+            v = v * 0.03937008;
+
+        mm = v / 0.03937008;
+
+        printf("\nInches: %3.4f", v);
+        printf("\nMM: %3.2f", mm);
+        printf("\n\nFraction: ");
+        print_fraction(v);
+        printf("\n");
+
+        print_surrounding_fractions(v, 128);
+        print_surrounding_fractions(v, 100);
+        print_surrounding_fractions(v, 64);
+        print_surrounding_fractions(v, 32);
+        print_surrounding_fractions(v, 16);
+        print_surrounding_fractions(v, 10);
+        print_surrounding_fractions(v, 8);
+        print_surrounding_fractions(v, 4);
+        print_surrounding_fractions(v, 2);
+
+        printf("\n\nStandard Drill Sizes +/- 5%%:\n");
+        lookup_drill_size(v);
+
+        printf("\n\n");
+    }
+}
+
 int main(void)
 {
     int choice, metric_flag;
@@ -507,6 +644,9 @@ int main(void)
             break;
         case 6:
             manifold(dt, metric_flag);
+            break;
+        case 7:
+            decimal_equivalence(metric_flag);
             break;
         }
     }
