@@ -29,14 +29,15 @@ int print_menu(int metric_flag)
     int choice;
 
     printf("\n\n\n\t\t*** Main Menu ***\n");
-    printf("\n\t<1> Absolute X-Y to Wheel Turns");
+    printf("\n\t<1> Absolute X,Y to Wheel Turns");
     printf("\n\t<2> Wheel turns to Distance");
-    printf("\n\t<3> Relative Angle & Distance to Absolute X-Y");
-    printf("\n\t<4> Angle");
-    printf("\n\t<5> Radius");
-    printf("\n\t<6> Manifold");
-    printf("\n\t<7> Decimal Equivalence");
-    printf("\n\t<8> Choose Inches or Millimeters");
+    printf("\n\t<3> Relative Distance & Angle to Absolute X,Y");
+    printf("\n\t<4> Absolute X1,Y1 & X2,Y2 to Distance & Angle");
+    printf("\n\t<5> Angle");
+    printf("\n\t<6> Radius");
+    printf("\n\t<7> Manifold");
+    printf("\n\t<8> Decimal Equivalence");
+    printf("\n\t<9> Choose Inches or Millimeters");
     if (metric_flag)
         printf(" (Currently Millimeters)");
     else
@@ -47,7 +48,7 @@ int print_menu(int metric_flag)
     do
     {
         choice = get_int("\n\nEnter Selection: ");
-    } while (choice < 0 || choice > 8);
+    } while (choice < 0 || choice > 9);
 
     return choice;
 }
@@ -212,6 +213,31 @@ int get_lcr(void)
     return lcr;
 }
 
+void xy_distance_angle(int metric_flag)
+{
+    double x1,y1,x2,y2,d,a;
+
+    x1 = fabs(get_fraction("\nEnter X1 Position: "));
+    y1 = fabs(get_fraction("\nEnter Y1 Position: "));
+    x2 = fabs(get_fraction("\nEnter X2 Position: "));
+    y2 = fabs(get_fraction("\nEnter Y2 Position: "));
+
+    if (metric_flag)
+    {
+        x1 = x1 * 0.03937008;
+        y1 = y1 * 0.03937008;
+        x2 = x2 * 0.03937008;
+        y2 = y2 * 0.03937008;
+    }
+
+    d = sqrt(pow(x2-x1,2) + pow(y2-y1,2));
+    a = rad_to_deg(atan2(y2-y1,x2-x1)) + 90.0;
+    if (a < 0.0) a = a + 360.0;
+
+    printf("\n\nDistance:\t%3.4fin %3.2fmm", d, d / 0.03937008);
+    printf("\nAngle:   \t%3.1f deg", a);
+}
+
 void abs_xy_wheel(double dt, int metric_flag)
 {
     double sx, sy;
@@ -241,7 +267,7 @@ void wheel_distance(double dt, int metric_flag)
     wt = wt * dt;
     d = wt + th;
 
-    printf("\n\nDistance :\t%3.4fin %3.2fmm", d, d / 0.03937008);
+    printf("\n\nDistance:\t%3.4fin %3.2fmm", d, d / 0.03937008);
 }
 
 void rel_xy_wheel(double dt, int metric_flag)
@@ -655,7 +681,7 @@ int main(void)
     double dt;
 
     printf("\n\n\n");
-    printf("\t\t\tManual Milling Suite v1.3");
+    printf("\t\t\tManual Milling Suite v1.4");
     printf("\n\n");
 
     print_layout();
@@ -682,18 +708,21 @@ int main(void)
             rel_xy_wheel(dt, metric_flag);
             break;
         case 4:
-            angle(dt, metric_flag);
+            xy_distance_angle(metric_flag);
             break;
         case 5:
-            radius(dt, metric_flag);
+            angle(dt, metric_flag);
             break;
         case 6:
-            manifold(dt, metric_flag);
+            radius(dt, metric_flag);
             break;
         case 7:
-            decimal_equivalence(metric_flag);
+            manifold(dt, metric_flag);
             break;
         case 8:
+            decimal_equivalence(metric_flag);
+            break;
+        case 9:
             metric_flag = get_english_or_metric();
             break;
         }
