@@ -23,7 +23,7 @@ double find_mod(double a, double b)
     return mod;
 }
 
-int print_menu(void)
+int print_menu(int metric_flag)
 {
     int choice;
 
@@ -35,12 +35,18 @@ int print_menu(void)
     printf("\n\t<5> Radius");
     printf("\n\t<6> Manifold");
     printf("\n\t<7> Decimal Equivalence");
+    printf("\n\t<8> Choose Inches or Millimeters");
+    if (metric_flag)
+        printf(" (Currently Millimeters)");
+    else
+        printf(" (Currently Inches)");
+
     printf("\n\n\t<0> Quit");
 
     do
     {
         choice = get_int("\n\nEnter Selection: ");
-    } while (choice < 0 || choice > 7);
+    } while (choice < 0 || choice > 8);
 
     return choice;
 }
@@ -466,7 +472,7 @@ void radius(double dt, int metric_flag)
     }
 }
 
-void print_fraction(double v)
+void print_fraction_double(double v)
 {
     fraction fract;
     double i, f;
@@ -491,7 +497,7 @@ void print_fraction(double v)
 }
 
 void lookup_drill_size(double v)
-{    
+{
     char line[20];
     char sz[20] = "";
     char last_sz[20] = "";
@@ -512,7 +518,7 @@ void lookup_drill_size(double v)
             }
         }
     }
-    
+
     if (file)
         fclose(file);
 
@@ -524,33 +530,58 @@ void lookup_drill_size(double v)
 
 int print_surrounding_fractions(double v, int dnom)
 {
-    double i, f, nf, i1, f1;
+    double i, f, fl;
+    double om, ol, ex;
     char *st = NULL;
+
+    v = fabs(v);
 
     if (dnom == 0)
         return FAIL_NUMBER;
 
     f = modf(v, &i);
-    nf = f / (1 / (double)dnom);
-    f1 = modf(nf, &i1);
+    fl = round(f * dnom);
 
-    //if (float_compare(f, i1 / (double)dnom, 1e-6)) return SUCCESS;
+    if (float_compare(fl,0.0,1e-6)) return SUCCESS;
 
-    sprintf_string(&st,"Nearest 1/%d Fractions: ", dnom);
+    sprintf_string(&st, "Nearest 1/%d Fractions: ", dnom);
 
     printf("\n%25s", st);
-    print_fraction(i + i1 / (double)dnom);
-    printf(" (%3.4f)", i1 / (double)dnom - f);
-    printf(" & ");
-    print_fraction(i + (i1 + 1.0) / (double)dnom);
-    printf(" (%3.4f)", (i1 + 1.0) / (double)dnom - f);
 
     free_malloc(st);
-    
+
+    ex = (i + fl / (double)dnom) - v;
+    ol = (i + (fl - 1.0) / (double)dnom) - v;
+    om = (i + (fl + 1.0) / (double)dnom) - v;
+
+    fraction_int_string(&st, (int)i, (int)(fl - 1.0), dnom);
+    print_padded_string(st, 13);
+    free_malloc(st);
+
+    sprintf_string(&st, "(%3.4f)", ol);
+    print_padded_string(st, 15);
+    free_malloc(st);
+
+    fraction_int_string(&st, (int)i, (int)fl, dnom);
+    print_padded_string(st, 13);
+    free_malloc(st);
+
+    sprintf_string(&st, "(%3.4f)", ex);
+    print_padded_string(st, 15);
+    free_malloc(st);
+
+    fraction_int_string(&st, (int)i, (int)(fl + 1.0), dnom);
+    print_padded_string(st, 13);
+    free_malloc(st);
+
+    sprintf_string(&st, "(%3.4f)", om);
+    print_padded_string(st, 15);
+    free_malloc(st);
+
     return SUCCESS;
 }
 
-void decimal_equivalence (int metric_flag)
+void decimal_equivalence(int metric_flag)
 {
     double v;
     double f;
@@ -559,7 +590,7 @@ void decimal_equivalence (int metric_flag)
     double nf;
     double df;
 
-    int n ,i;
+    int n, i;
 
     fraction fract;
     char *s = NULL;
@@ -567,9 +598,7 @@ void decimal_equivalence (int metric_flag)
 
     while (TRUE)
     {
-        v = get_fraction("\nEnter a decimal or fractional number or 0 to quit: ");
-
-        v = fabs(v);
+        v = get_fraction("\nEnter a decimal or fractional number (0 to Return to Menu): ");
 
         if (v == 0.0)
             return;
@@ -581,19 +610,19 @@ void decimal_equivalence (int metric_flag)
 
         printf("\nInches: %3.4f", v);
         printf("\nMM: %3.2f", mm);
-        printf("\n\nFraction: ");
-        print_fraction(v);
+        printf("\nExact Fraction: ");
+        print_fraction_double(v);
         printf("\n");
 
-        print_surrounding_fractions(v, 128);
-        print_surrounding_fractions(v, 100);
-        print_surrounding_fractions(v, 64);
-        print_surrounding_fractions(v, 32);
-        print_surrounding_fractions(v, 16);
-        print_surrounding_fractions(v, 10);
-        print_surrounding_fractions(v, 8);
-        print_surrounding_fractions(v, 4);
         print_surrounding_fractions(v, 2);
+        print_surrounding_fractions(v, 4);
+        print_surrounding_fractions(v, 8);
+        print_surrounding_fractions(v, 10);
+        print_surrounding_fractions(v, 16);
+        print_surrounding_fractions(v, 32);
+        print_surrounding_fractions(v, 64);
+        print_surrounding_fractions(v, 100);
+        print_surrounding_fractions(v, 128);
 
         printf("\n\nStandard Drill Sizes +/- 5%%:\n");
         lookup_drill_size(v);
@@ -604,22 +633,20 @@ void decimal_equivalence (int metric_flag)
 
 int main(void)
 {
-    int choice, metric_flag;
+    int choice, metric_flag = 0;
     double dt;
 
     printf("\n\n\n");
-    printf("\t\t\tManual Milling Suite v1.0");
+    printf("\t\t\tManual Milling Suite v1.2");
     printf("\n\n");
 
     print_layout();
 
     dt = fabs(get_fraction("\nEnter Distance Per Turn of Wheel in Inches: "));
 
-    metric_flag = get_english_or_metric();
-
     while (TRUE)
     {
-        choice = print_menu();
+        choice = print_menu(metric_flag);
 
         printf("\n\n");
 
@@ -647,6 +674,9 @@ int main(void)
             break;
         case 7:
             decimal_equivalence(metric_flag);
+            break;
+        case 8:
+            metric_flag = get_english_or_metric();
             break;
         }
     }
