@@ -3,7 +3,7 @@
 #include <math.h>
 #include "ghcommon.h"
 
-double find_mod(double a, double b)
+double double_mod(double a, double b)
 {
     double mod;
 
@@ -11,6 +11,7 @@ double find_mod(double a, double b)
         mod = -a;
     else
         mod = a;
+
     if (b < 0)
         b = -b;
 
@@ -134,6 +135,41 @@ int get_english_or_metric(void)
     return metric_flag;
 }
 
+int get_inside_outside(void)
+{
+    int count, inside_outside;
+    char *s = NULL;
+
+    while (TRUE)
+    {
+        count = get_string(&s, "\n\nEnter <I>nside or <O>utside Radius: ");
+
+        if (count == 0)
+        {
+            free_malloc(s);
+            continue;
+        }
+
+        if (s[0] == 'I' || s[0] == 'i')
+        {
+            free_malloc(s);
+            inside_outside = FALSE;
+            break;
+        }
+
+        if (s[0] == 'O' || s[0] == 'o')
+        {
+            free_malloc(s);
+            inside_outside = TRUE;
+            break;
+        }
+
+        free_malloc(s);
+    }
+
+    return inside_outside;
+}
+
 int get_lcr(void)
 {
     int count, lcr;
@@ -237,7 +273,7 @@ void rel_xy_wheel(double dt, int metric_flag)
             d = d * 0.03937008;
         }
 
-        a = find_mod(get_fraction("\nEnter Angle: "), 360.0);
+        a = double_mod(get_fraction("\nEnter Angle: "), 360.0);
 
         ra = PI * a / 180.0;
 
@@ -284,7 +320,7 @@ void manifold(double dt, int metric_flag)
 
     centerxoffset = fabs(get_fraction("\nEnter Center X: "));
     centeryoffset = fabs(get_fraction("\nEnter Center Y: "));
-    startangle = find_mod(get_fraction("\nEnter Start Angle: "), 360.0);
+    startangle = double_mod(get_fraction("\nEnter Start Angle: "), 360.0);
     endangle = startangle + 360.0;
 
     if (metric_flag)
@@ -316,7 +352,6 @@ void angle(double dt, int metric_flag)
     double centeryoffset;
     double angle;
     double tangle;
-    double distance;
     int steps;
     int step;
     double leftover;
@@ -329,13 +364,10 @@ void angle(double dt, int metric_flag)
 
     centerxoffset = fabs(get_fraction("\nEnter Start X: "));
     centeryoffset = fabs(get_fraction("\nEnter Start Y: "));
-    angle = find_mod(get_fraction("\nEnter Angle: "), 360.0);
+    angle = double_mod(get_fraction("\nEnter Angle: "), 360.0);
 
-    do
-    {
-        distance = fabs(get_fraction("\nEnter Total Distance: "));
-        inc = fabs(get_fraction("\nEnter Step Distance: "));
-    } while (inc >= distance);
+    inc = fabs(get_fraction("\nEnter Step Distance: "));
+    steps = abs(get_int("\nEnter Number of Steps: "));
 
     tool_radius = fabs(get_fraction("\nEnter Tool Diameter: ") / 2.0);
 
@@ -345,7 +377,6 @@ void angle(double dt, int metric_flag)
     {
         centerxoffset = centerxoffset * 0.03937008;
         centeryoffset = centeryoffset * 0.03937008;
-        distance = distance * 0.03937008;
         inc = inc * 0.03937008;
         tool_radius = tool_radius * 0.03937008;
     }
@@ -353,7 +384,7 @@ void angle(double dt, int metric_flag)
     switch (lcr)
     {
     case 0:
-        tangle = find_mod(angle - 90, 360.0);
+        tangle = double_mod(angle - 90, 360.0);
         tradians = deg_to_rad(tangle);
         x = centerxoffset + tool_radius * sin(tradians);
         y = centeryoffset - tool_radius * cos(tradians);
@@ -363,15 +394,13 @@ void angle(double dt, int metric_flag)
         y = centeryoffset;
         break;
     case 2:
-        tangle = find_mod(angle + 90, 360.0);
+        tangle = double_mod(angle + 90, 360.0);
         tradians = deg_to_rad(tangle);
         x = centerxoffset + tool_radius * sin(tradians);
         y = centeryoffset - tool_radius * cos(tradians);
         break;
     }
 
-    steps = (int)floor(distance / inc);
-    leftover = ((distance / inc) - trunc(distance / inc)) * inc;
     radians = deg_to_rad(angle);
 
     print_xy_position(x, y, dt, linecount);
@@ -380,16 +409,6 @@ void angle(double dt, int metric_flag)
     {
         x = x + inc * sin(radians);
         y = y - inc * cos(radians);
-
-        linecount++;
-
-        print_xy_position(x, y, dt, linecount);
-    }
-
-    if (leftover > 0.0)
-    {
-        x = x + leftover * sin(radians);
-        y = y - leftover * cos(radians);
 
         linecount++;
 
@@ -415,23 +434,21 @@ void radius(double dt, int metric_flag)
     int nh;
     int c;
 
-    do
-    {
-        c = get_int("\nEnter <1> Concave or <2> Convex: ");
-    } while (c < 0 || c > 2);
+    c = get_inside_outside();
 
     do
     {
         radius = fabs(get_fraction("\nEnter Radius: "));
         tool_radius = fabs(get_fraction("\nEnter Tool Diameter: ") / 2.0);
-    } while ((radius < tool_radius) && (c = 1));
+    } while ((radius < tool_radius) && (c == 0));
 
     arc_length = fabs(get_fraction("\nEnter Step Arc Length: "));
 
     centerxoffset = fabs(get_fraction("\nEnter Center X: "));
     centeryoffset = fabs(get_fraction("\nEnter Center Y: "));
-    startangle = find_mod(get_fraction("\nEnter Start Angle: "), 360.0);
-    endangle = find_mod(get_fraction("\nEnter End Angle: "), 360.0);
+    startangle = double_mod(get_fraction("\nEnter Start Angle: "), 360.0);
+    endangle = double_mod(get_fraction("\nEnter End Angle: "), 360.0);
+
     if (endangle == 0.0)
         endangle = 360.0;
 
@@ -450,12 +467,12 @@ void radius(double dt, int metric_flag)
 
     angleinc = arc_length / (PI * radius) * 360.0;
 
-    if (c == 1)
+    if (c == 0)
         radius -= tool_radius;
     else
         radius += tool_radius;
 
-    printf("\n\nAngle Increment = %3.1f", angleinc);
+    printf("\n\nAngle Increment = %3.1f deg", angleinc);
 
     linecount = 0;
 
@@ -542,7 +559,8 @@ int print_surrounding_fractions(double v, int dnom)
     f = modf(v, &i);
     fl = round(f * dnom);
 
-    if (float_compare(fl,0.0,1e-6)) return SUCCESS;
+    if (float_compare(fl, 0.0, 1e-6))
+        return SUCCESS;
 
     sprintf_string(&st, "Nearest 1/%d Fractions: ", dnom);
 
@@ -550,8 +568,8 @@ int print_surrounding_fractions(double v, int dnom)
 
     free_malloc(st);
 
-    ex = (i + fl / (double)dnom) - v;
     ol = (i + (fl - 1.0) / (double)dnom) - v;
+    ex = (i + fl / (double)dnom) - v;
     om = (i + (fl + 1.0) / (double)dnom) - v;
 
     fraction_int_string(&st, (int)i, (int)(fl - 1.0), dnom);
@@ -637,7 +655,7 @@ int main(void)
     double dt;
 
     printf("\n\n\n");
-    printf("\t\t\tManual Milling Suite v1.2");
+    printf("\t\t\tManual Milling Suite v1.3");
     printf("\n\n");
 
     print_layout();
