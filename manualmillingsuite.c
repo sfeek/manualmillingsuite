@@ -28,7 +28,7 @@ int print_menu(int metric_flag)
 {
     int choice;
 
-    printf("\n\n\n\t\t*** Main Menu ***\n");
+    printf("\n\n\n\n\t\t*** Main Menu ***\n");
     printf("\n\t<1> Absolute X,Y to Wheel Turns");
     printf("\n\t<2> Wheel turns to Distance");
     printf("\n\t<3> Relative Distance & Angle to Absolute X,Y");
@@ -36,8 +36,9 @@ int print_menu(int metric_flag)
     printf("\n\t<5> Angle");
     printf("\n\t<6> Radius");
     printf("\n\t<7> Manifold");
-    printf("\n\t<8> Decimal Equivalence");
-    printf("\n\t<9> Choose Inches or Millimeters");
+    printf("\n\t<8> Decimal Equivalent");
+    printf("\n\t<9> Tap Drill Size");
+    printf("\n\t<10> Choose Inches or Millimeters");
     if (metric_flag)
         printf(" (Currently Millimeters)");
     else
@@ -48,7 +49,7 @@ int print_menu(int metric_flag)
     do
     {
         choice = get_int("\n\nEnter Selection: ");
-    } while (choice < 0 || choice > 9);
+    } while (choice < 0 || choice > 10);
 
     return choice;
 }
@@ -579,6 +580,59 @@ void lookup_drill_size(double v)
     return;
 }
 
+void tap_drill_size(int metric_flag)
+{
+    double d,p,hp,td,tpi,hd,maxhole;
+    int ss;
+    
+    if (metric_flag)
+    {
+        d = fabs(get_fraction("\nEnter Thread Diameter: "));
+        p = fabs(get_fraction("\nEnter Thread Pitch: "));
+        hp = fabs(get_fraction("\nEnter Thread Depth in %: "));
+        hd = fabs(get_fraction("\nEnter Bolt Head Diameter (0 to Skip Clearance Hole Calculation): "));
+
+        td = d - (hp * p) / 76.98;
+
+        printf("\n\n  Tap Drill Size: %3.2f\n", td);
+
+        if (hd > 0.0)
+        {
+            maxhole = (hd + d) / 2.0;
+            printf("\n  Min Clearance Hole: %3.4f", d);
+            printf("\n  Tight Fit Clearance Hole: %3.4f", (maxhole - d) * 0.125 + d);
+            printf("\n  Normal Fit Clearance Hole: %3.4f", (maxhole - d) * 0.25 + d);
+            printf("\n  Max Clearance Hole: %3.4f", maxhole);
+        }
+    }
+    else
+    {
+        printf("\n    Unified Screw Diameter Chart < 1/4in\n");
+        for (ss = 0; ss <= 12; ss++)
+        {
+            printf("\n  #%2d:  %3.3f", ss, 0.060 + ((double)ss * 0.013));
+        }
+
+        d = fabs(get_fraction("\n\n\nEnter Thread Diameter: "));
+        tpi = fabs(get_fraction("\nEnter Threads per Inch: "));
+        hp = fabs(get_fraction("\nEnter Thread Depth in %: "));
+        hd = fabs(get_fraction("\nEnter Bolt Head Diameter (0 to Skip Clearance Hole Calculation): "));
+
+        td = d - hp / (76.98 * tpi);
+
+        printf("\n\n  Tap Drill Size: %3.4f\n", td);
+
+        if (hd > 0.0)
+        {
+            maxhole = (hd + d) / 2.0;
+            printf("\n  Min Clearance Hole: %3.4f", d);
+            printf("\n  Tight Fit Clearance Hole: %3.4f", (maxhole - d) * 0.125 + d);
+            printf("\n  Normal Fit Clearance Hole: %3.4f", (maxhole - d) * 0.25 + d);
+            printf("\n  Max Clearance Hole: %3.4f", maxhole);
+        }
+    }
+}
+
 void decimal_equivalence(int metric_flag)
 {
     double fract = 64.0;
@@ -605,16 +659,17 @@ void decimal_equivalence(int metric_flag)
         f = modf(v, &i);
         fl = round(f * fract);
 
-        s = (fl - 5) / fract;
-        e = (fl + 5) / fract;
+        s = (fl - 5) / fract + i;
+        e = (fl + 5) / fract + i;
 
         if (s < 0)
             s = 0;
 
         for (f = s; f <= e; f += step)
         {
-            printf("\n  (%3.4f)\t", f - v);
+            printf("\n  %3.4f  ", f);
             print_fraction_double(f);
+            printf("\t(%3.4f)", f - v);
         }
 
         printf("\n\nStandard Drill Sizes +/- 5%%:\n");
@@ -672,6 +727,9 @@ int main(void)
             decimal_equivalence(metric_flag);
             break;
         case 9:
+            tap_drill_size(metric_flag);
+            break;
+        case 10:
             metric_flag = get_english_or_metric();
             break;
         }
