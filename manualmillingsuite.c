@@ -3,6 +3,8 @@
 #include <math.h>
 #include "ghcommon.h"
 
+#define MM 0.03937008
+
 double double_mod(double a, double b)
 {
     double mod;
@@ -29,16 +31,18 @@ int print_menu(int metric_flag)
     int choice;
 
     printf("\n\n\n\n\t\t*** Main Menu ***\n");
-    printf("\n\t<1> Absolute X,Y to Wheel Turns");
+
+    printf("\n\t<1> Distance to Wheel Turns");
     printf("\n\t<2> Wheel turns to Distance");
-    printf("\n\t<3> Relative Distance & Angle to Absolute X,Y");
-    printf("\n\t<4> Absolute X1,Y1 & X2,Y2 to Distance & Angle");
-    printf("\n\t<5> Angle");
-    printf("\n\t<6> Radius");
-    printf("\n\t<7> Manifold");
-    printf("\n\t<8> Decimal Equivalent");
-    printf("\n\t<9> Tap Drill Size");
-    printf("\n\t<10> Choose Inches or Millimeters");
+    printf("\n\t<3> Absolute X,Y to Wheel Turns");
+    printf("\n\t<4> Relative Distance & Angle to Absolute X,Y");
+    printf("\n\t<5> Absolute X1,Y1 & X2,Y2 to Distance & Angle");
+    printf("\n\t<6> Angle");
+    printf("\n\t<7> Radius");
+    printf("\n\t<8> Manifold");
+    printf("\n\t<9> Decimal Equivalent");
+    printf("\n\t<10> Tap Drill Size");
+    printf("\n\t<11> Choose Inches or Millimeters");
     if (metric_flag)
         printf(" (Currently Millimeters)");
     else
@@ -49,7 +53,7 @@ int print_menu(int metric_flag)
     do
     {
         choice = get_int("\n\nEnter Selection: ");
-    } while (choice < 0 || choice > 10);
+    } while (choice < 0 || choice > 11);
 
     return choice;
 }
@@ -81,7 +85,7 @@ void print_xy_position(double x, double y, double dt, int linecount)
     else
     {
         wp = wheel_position(x, y, dt);
-        printf("\n\n#%d Position\tX = %3.4fin %3.2fmm   Y = %3.4fin %3.2fmm   %s", linecount, x, x / 0.03937008, y, y / 0.03937008, wp);
+        printf("\n\n#%d Position\tX = %3.4fin %3.2fmm   Y = %3.4fin %3.2fmm   %s", linecount, x, x / MM, y, y / MM, wp);
         free_malloc(wp);
     }
 }
@@ -226,10 +230,10 @@ void xy_distance_angle(double dt, int metric_flag)
 
     if (metric_flag)
     {
-        x1 = x1 * 0.03937008;
-        y1 = y1 * 0.03937008;
-        x2 = x2 * 0.03937008;
-        y2 = y2 * 0.03937008;
+        x1 = x1 * MM;
+        y1 = y1 * MM;
+        x2 = x2 * MM;
+        y2 = y2 * MM;
     }
 
     mx = (x2 - x1) / 2 + x1;
@@ -239,11 +243,11 @@ void xy_distance_angle(double dt, int metric_flag)
     if (a < 0.0)
         a = a + 360.0;
 
-    printf("\n\nDistance:\t%3.4fin %3.2fmm", d, d / 0.03937008);
+    printf("\n\nDistance:\t%3.4fin %3.2fmm", d, d / MM);
     printf("\nAngle:   \t%3.1f deg", a);
 
     wp = wheel_position(mx, my, dt);
-    printf("\n\nMidpoint: \tX = %3.4fin %3.2fmm   Y = %3.4fin %3.2fmm   %s", mx, mx / 0.03937008, my, my / 0.03937008, wp);
+    printf("\n\nMidpoint: \tX = %3.4fin %3.2fmm   Y = %3.4fin %3.2fmm   %s", mx, mx / MM, my, my / MM, wp);
     free_malloc(wp);
 }
 
@@ -257,13 +261,30 @@ void abs_xy_wheel(double dt, int metric_flag)
 
     if (metric_flag)
     {
-        sx = sx * 0.03937008;
-        sy = sy * 0.03937008;
+        sx = sx * MM;
+        sy = sy * MM;
     }
 
     wp = wheel_position(sx, sy, dt);
-    printf("\n\nWheel Position:\tX = %3.4fin %3.2fmm   Y = %3.4fin %3.2fmm   %s", sx, sx / 0.03937008, sy, sy / 0.03937008, wp);
+    printf("\n\nWheel Position:\tX = %3.4fin %3.2fmm   Y = %3.4fin %3.2fmm   %s", sx, sx / MM, sy, sy / MM, wp);
     free_malloc(wp);
+}
+
+void distance_wheel(double dt, int metric_flag)
+{
+    double d;
+    int xt, xr;
+    char *wp = NULL;
+
+    d = fabs(get_fraction("\nEnter Distance: "));
+
+    if (metric_flag)
+        d = d * MM;
+
+    xt = (int)trunc(d / dt);
+    xr = abs((int)round((d / dt - xt) * dt * 1000));
+
+    printf("\n\nWheel Position: (%dT + %d)", xt, xr);
 }
 
 void wheel_distance(double dt, int metric_flag)
@@ -276,7 +297,7 @@ void wheel_distance(double dt, int metric_flag)
     wt = wt * dt;
     d = wt + th;
 
-    printf("\n\nDistance:\t%3.4fin %3.2fmm", d, d / 0.03937008);
+    printf("\n\nDistance:\t%3.4fin %3.2fmm", d, d / MM);
 }
 
 void rel_xy_wheel(double dt, int metric_flag)
@@ -289,12 +310,12 @@ void rel_xy_wheel(double dt, int metric_flag)
 
     if (metric_flag)
     {
-        sx = sx * 0.03937008;
-        sy = sy * 0.03937008;
+        sx = sx * MM;
+        sy = sy * MM;
     }
 
     wp = wheel_position(sx, sy, dt);
-    printf("\n\nStarting at \tX = %3.4fin %3.2fmm   Y = %3.4fin %3.2fmm   %s", sx, sx / 0.03937008, sy, sy / 0.03937008, wp);
+    printf("\n\nStarting at \tX = %3.4fin %3.2fmm   Y = %3.4fin %3.2fmm   %s", sx, sx / MM, sy, sy / MM, wp);
     free_malloc(wp);
 
     while (TRUE)
@@ -305,7 +326,7 @@ void rel_xy_wheel(double dt, int metric_flag)
 
         if (metric_flag)
         {
-            d = d * 0.03937008;
+            d = d * MM;
         }
 
         a = double_mod(get_fraction("\nEnter Angle: "), 360.0);
@@ -322,7 +343,7 @@ void rel_xy_wheel(double dt, int metric_flag)
         }
 
         wp = wheel_position(dx, dy, dt);
-        printf("\n\nEnding at \tX = %3.4fin %3.2fmm   Y = %3.4fin %3.2fmm   %s", dx, dx / 0.03937008, dy, dy / 0.03937008, wp);
+        printf("\n\nEnding at \tX = %3.4fin %3.2fmm   Y = %3.4fin %3.2fmm   %s", dx, dx / MM, dy, dy / MM, wp);
         free_malloc(wp);
 
         sx = dx;
@@ -360,9 +381,9 @@ void manifold(double dt, int metric_flag)
 
     if (metric_flag)
     {
-        radius = radius * 0.03937008;
-        centerxoffset = centerxoffset * 0.03937008;
-        centeryoffset = centeryoffset * 0.03937008;
+        radius = radius * MM;
+        centerxoffset = centerxoffset * MM;
+        centeryoffset = centeryoffset * MM;
     }
 
     linecount = 0;
@@ -410,10 +431,10 @@ void angle(double dt, int metric_flag)
 
     if (metric_flag)
     {
-        centerxoffset = centerxoffset * 0.03937008;
-        centeryoffset = centeryoffset * 0.03937008;
-        inc = inc * 0.03937008;
-        tool_radius = tool_radius * 0.03937008;
+        centerxoffset = centerxoffset * MM;
+        centeryoffset = centeryoffset * MM;
+        inc = inc * MM;
+        tool_radius = tool_radius * MM;
     }
 
     switch (lcr)
@@ -494,10 +515,10 @@ void radius(double dt, int metric_flag)
 
     if (metric_flag)
     {
-        radius = radius * 0.03937008;
-        centerxoffset = centerxoffset * 0.03937008;
-        centeryoffset = centeryoffset * 0.03937008;
-        arc_length = arc_length * 0.03937008;
+        radius = radius * MM;
+        centerxoffset = centerxoffset * MM;
+        centeryoffset = centeryoffset * MM;
+        arc_length = arc_length * MM;
     }
 
     angleinc = arc_length / (PI * radius) * 360.0;
@@ -528,6 +549,7 @@ void print_fraction_double(double v)
 {
     fraction fract;
     double i, f;
+    char *st = NULL;
 
     f = modf(fabs(v), &i);
 
@@ -538,14 +560,24 @@ void print_fraction_double(double v)
 
     if (fract.n == 0)
     {
-        printf("%d", (int)i);
+        sprintf_string(&st, "%d", (int)i);
+        print_padded_string(st, 13);
+        free_malloc(st);
         return;
     }
 
     if (i <= -1.0 || i >= 1.0)
-        printf("%d %d/%d", (int)i, fract.n, fract.d);
+    {
+        sprintf_string(&st, "%d %d/%d", (int)i, fract.n, fract.d);
+        print_padded_string(st, 13);
+        free_malloc(st);
+    }
     else
-        printf("%d/%d", fract.n, fract.d);
+    {
+        sprintf_string(&st, "%d/%d", fract.n, fract.d);
+        print_padded_string(st, 13);
+        free_malloc(st);
+    }
 }
 
 void lookup_drill_size(double v)
@@ -582,9 +614,9 @@ void lookup_drill_size(double v)
 
 void tap_drill_size(int metric_flag)
 {
-    double d,p,hp,td,tpi,hd,maxhole;
+    double d, p, hp, td, tpi, hd, maxhole;
     int ss;
-    
+
     if (metric_flag)
     {
         d = fabs(get_fraction("\nEnter Thread Diameter: "));
@@ -633,7 +665,7 @@ void tap_drill_size(int metric_flag)
     }
 }
 
-void decimal_equivalence(int metric_flag)
+void decimal_equivalent(int metric_flag)
 {
     double fract = 64.0;
     double v, i, fl;
@@ -642,16 +674,16 @@ void decimal_equivalence(int metric_flag)
 
     while (TRUE)
     {
-        v = get_fraction("\nEnter a decimal or fractional number (0 to Return to Menu): ");
+        v = fabs(get_fraction("\nEnter a decimal or fractional number (0 to Return to Menu): "));
 
         if (v == 0.0)
             return;
 
         if (metric_flag)
-            v = v * 0.03937008;
+            v = v * MM;
 
         printf("\nInches: %3.4f", v);
-        printf("\nMM: %3.2f", v / 0.03937008);
+        printf("\nMM: %3.2f", v / MM);
         printf("\nExact Fraction: ");
         print_fraction_double(v);
         printf("\n\nNearby Fractions");
@@ -703,33 +735,36 @@ int main(void)
         case 0:
             return SUCCESS;
         case 1:
-            abs_xy_wheel(dt, metric_flag);
+            distance_wheel(dt, metric_flag);
             break;
         case 2:
             wheel_distance(dt, metric_flag);
             break;
         case 3:
-            rel_xy_wheel(dt, metric_flag);
+            abs_xy_wheel(dt, metric_flag);
             break;
         case 4:
-            xy_distance_angle(dt, metric_flag);
+            rel_xy_wheel(dt, metric_flag);
             break;
         case 5:
-            angle(dt, metric_flag);
+            xy_distance_angle(dt, metric_flag);
             break;
         case 6:
-            radius(dt, metric_flag);
+            angle(dt, metric_flag);
             break;
         case 7:
-            manifold(dt, metric_flag);
+            radius(dt, metric_flag);
             break;
         case 8:
-            decimal_equivalence(metric_flag);
+            manifold(dt, metric_flag);
             break;
         case 9:
-            tap_drill_size(metric_flag);
+            decimal_equivalent(metric_flag);
             break;
         case 10:
+            tap_drill_size(metric_flag);
+            break;
+        case 11:
             metric_flag = get_english_or_metric();
             break;
         }
