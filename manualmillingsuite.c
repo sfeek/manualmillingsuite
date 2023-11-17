@@ -28,7 +28,7 @@ int print_menu(int metric_flag)
 {
     int choice;
 
-    printf("\n\n\n\t\t*** Main Menu ***\n");
+    printf("\n\n\n\n\t\t*** Main Menu ***\n");
     printf("\n\t<1> Absolute X,Y to Wheel Turns");
     printf("\n\t<2> Wheel turns to Distance");
     printf("\n\t<3> Relative Distance & Angle to Absolute X,Y");
@@ -36,8 +36,9 @@ int print_menu(int metric_flag)
     printf("\n\t<5> Angle");
     printf("\n\t<6> Radius");
     printf("\n\t<7> Manifold");
-    printf("\n\t<8> Decimal Equivalence");
-    printf("\n\t<9> Choose Inches or Millimeters");
+    printf("\n\t<8> Decimal Equivalent");
+    printf("\n\t<9> Tap Drill Size");
+    printf("\n\t<10> Choose Inches or Millimeters");
     if (metric_flag)
         printf(" (Currently Millimeters)");
     else
@@ -48,7 +49,7 @@ int print_menu(int metric_flag)
     do
     {
         choice = get_int("\n\nEnter Selection: ");
-    } while (choice < 0 || choice > 9);
+    } while (choice < 0 || choice > 10);
 
     return choice;
 }
@@ -213,9 +214,10 @@ int get_lcr(void)
     return lcr;
 }
 
-void xy_distance_angle(int metric_flag)
+void xy_distance_angle(double dt, int metric_flag)
 {
-    double x1,y1,x2,y2,d,a;
+    double x1, y1, x2, y2, d, a, mx, my;
+    char *wp = NULL;
 
     x1 = fabs(get_fraction("\nEnter X1 Position: "));
     y1 = fabs(get_fraction("\nEnter Y1 Position: "));
@@ -230,12 +232,19 @@ void xy_distance_angle(int metric_flag)
         y2 = y2 * 0.03937008;
     }
 
-    d = sqrt(pow(x2-x1,2) + pow(y2-y1,2));
-    a = rad_to_deg(atan2(y2-y1,x2-x1)) + 90.0;
-    if (a < 0.0) a = a + 360.0;
+    mx = (x2 - x1) / 2 + x1;
+    my = (y2 - y1) / 2 + y1;
+    d = sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2));
+    a = rad_to_deg(atan2(y2 - y1, x2 - x1)) + 90.0;
+    if (a < 0.0)
+        a = a + 360.0;
 
     printf("\n\nDistance:\t%3.4fin %3.2fmm", d, d / 0.03937008);
     printf("\nAngle:   \t%3.1f deg", a);
+
+    wp = wheel_position(mx, my, dt);
+    printf("\n\nMidpoint: \tX = %3.4fin %3.2fmm   Y = %3.4fin %3.2fmm   %s", mx, mx / 0.03937008, my, my / 0.03937008, wp);
+    free_malloc(wp);
 }
 
 void abs_xy_wheel(double dt, int metric_flag)
@@ -571,74 +580,65 @@ void lookup_drill_size(double v)
     return;
 }
 
-int print_surrounding_fractions(double v, int dnom)
+void tap_drill_size(int metric_flag)
 {
-    double i, f, fl;
-    double om, ol, ex;
-    char *st = NULL;
+    double d,p,hp,td,tpi,hd,maxhole;
+    int ss;
+    
+    if (metric_flag)
+    {
+        d = fabs(get_fraction("\nEnter Thread Diameter: "));
+        p = fabs(get_fraction("\nEnter Thread Pitch: "));
+        hp = fabs(get_fraction("\nEnter Thread Depth in %: "));
+        hd = fabs(get_fraction("\nEnter Bolt Head Diameter (0 to Skip Clearance Hole Calculation): "));
 
-    v = fabs(v);
+        td = d - (hp * p) / 76.98;
 
-    if (dnom == 0)
-        return FAIL_NUMBER;
+        printf("\n\n  Tap Drill Size: %3.2f\n", td);
 
-    f = modf(v, &i);
-    fl = round(f * dnom);
+        if (hd > 0.0)
+        {
+            maxhole = (hd + d) / 2.0;
+            printf("\n  Min Clearance Hole: %3.4f", d);
+            printf("\n  Tight Fit Clearance Hole: %3.4f", (maxhole - d) * 0.125 + d);
+            printf("\n  Normal Fit Clearance Hole: %3.4f", (maxhole - d) * 0.25 + d);
+            printf("\n  Max Clearance Hole: %3.4f", maxhole);
+        }
+    }
+    else
+    {
+        printf("\n    Unified Screw Diameter Chart < 1/4in\n");
+        for (ss = 0; ss <= 12; ss++)
+        {
+            printf("\n  #%2d:  %3.3f", ss, 0.060 + ((double)ss * 0.013));
+        }
 
-    if (float_compare(fl, 0.0, 1e-6))
-        return SUCCESS;
+        d = fabs(get_fraction("\n\n\nEnter Thread Diameter: "));
+        tpi = fabs(get_fraction("\nEnter Threads per Inch: "));
+        hp = fabs(get_fraction("\nEnter Thread Depth in %: "));
+        hd = fabs(get_fraction("\nEnter Bolt Head Diameter (0 to Skip Clearance Hole Calculation): "));
 
-    sprintf_string(&st, "Nearest 1/%d Fractions: ", dnom);
+        td = d - hp / (76.98 * tpi);
 
-    printf("\n%25s", st);
+        printf("\n\n  Tap Drill Size: %3.4f\n", td);
 
-    free_malloc(st);
-
-    ol = (i + (fl - 1.0) / (double)dnom) - v;
-    ex = (i + fl / (double)dnom) - v;
-    om = (i + (fl + 1.0) / (double)dnom) - v;
-
-    fraction_int_string(&st, (int)i, (int)(fl - 1.0), dnom);
-    print_padded_string(st, 13);
-    free_malloc(st);
-
-    sprintf_string(&st, "(%3.4f)", ol);
-    print_padded_string(st, 15);
-    free_malloc(st);
-
-    fraction_int_string(&st, (int)i, (int)fl, dnom);
-    print_padded_string(st, 13);
-    free_malloc(st);
-
-    sprintf_string(&st, "(%3.4f)", ex);
-    print_padded_string(st, 15);
-    free_malloc(st);
-
-    fraction_int_string(&st, (int)i, (int)(fl + 1.0), dnom);
-    print_padded_string(st, 13);
-    free_malloc(st);
-
-    sprintf_string(&st, "(%3.4f)", om);
-    print_padded_string(st, 15);
-    free_malloc(st);
-
-    return SUCCESS;
+        if (hd > 0.0)
+        {
+            maxhole = (hd + d) / 2.0;
+            printf("\n  Min Clearance Hole: %3.4f", d);
+            printf("\n  Tight Fit Clearance Hole: %3.4f", (maxhole - d) * 0.125 + d);
+            printf("\n  Normal Fit Clearance Hole: %3.4f", (maxhole - d) * 0.25 + d);
+            printf("\n  Max Clearance Hole: %3.4f", maxhole);
+        }
+    }
 }
 
 void decimal_equivalence(int metric_flag)
 {
-    double v;
-    double f;
-    double mm;
-    double f64;
-    double nf;
-    double df;
-
-    int n, i;
-
-    fraction fract;
-    char *s = NULL;
-    size_t count;
+    double fract = 64.0;
+    double v, i, fl;
+    double s, e, f;
+    double step = 1 / fract;
 
     while (TRUE)
     {
@@ -650,23 +650,27 @@ void decimal_equivalence(int metric_flag)
         if (metric_flag)
             v = v * 0.03937008;
 
-        mm = v / 0.03937008;
-
         printf("\nInches: %3.4f", v);
-        printf("\nMM: %3.2f", mm);
+        printf("\nMM: %3.2f", v / 0.03937008);
         printf("\nExact Fraction: ");
         print_fraction_double(v);
-        printf("\n");
+        printf("\n\nNearby Fractions");
 
-        print_surrounding_fractions(v, 2);
-        print_surrounding_fractions(v, 4);
-        print_surrounding_fractions(v, 8);
-        print_surrounding_fractions(v, 10);
-        print_surrounding_fractions(v, 16);
-        print_surrounding_fractions(v, 32);
-        print_surrounding_fractions(v, 64);
-        print_surrounding_fractions(v, 100);
-        print_surrounding_fractions(v, 128);
+        f = modf(v, &i);
+        fl = round(f * fract);
+
+        s = (fl - 5) / fract + i;
+        e = (fl + 5) / fract + i;
+
+        if (s < 0)
+            s = 0;
+
+        for (f = s; f <= e; f += step)
+        {
+            printf("\n  %3.4f  ", f);
+            print_fraction_double(f);
+            printf("\t(%3.4f)", f - v);
+        }
 
         printf("\n\nStandard Drill Sizes +/- 5%%:\n");
         lookup_drill_size(v);
@@ -681,7 +685,7 @@ int main(void)
     double dt;
 
     printf("\n\n\n");
-    printf("\t\t\tManual Milling Suite v1.4");
+    printf("\t\t\tManual Milling Suite v1.5");
     printf("\n\n");
 
     print_layout();
@@ -708,7 +712,7 @@ int main(void)
             rel_xy_wheel(dt, metric_flag);
             break;
         case 4:
-            xy_distance_angle(metric_flag);
+            xy_distance_angle(dt, metric_flag);
             break;
         case 5:
             angle(dt, metric_flag);
@@ -723,6 +727,9 @@ int main(void)
             decimal_equivalence(metric_flag);
             break;
         case 9:
+            tap_drill_size(metric_flag);
+            break;
+        case 10:
             metric_flag = get_english_or_metric();
             break;
         }
