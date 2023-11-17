@@ -213,9 +213,10 @@ int get_lcr(void)
     return lcr;
 }
 
-void xy_distance_angle(int metric_flag)
+void xy_distance_angle(double dt, int metric_flag)
 {
-    double x1,y1,x2,y2,d,a;
+    double x1, y1, x2, y2, d, a, mx, my;
+    char *wp = NULL;
 
     x1 = fabs(get_fraction("\nEnter X1 Position: "));
     y1 = fabs(get_fraction("\nEnter Y1 Position: "));
@@ -230,12 +231,19 @@ void xy_distance_angle(int metric_flag)
         y2 = y2 * 0.03937008;
     }
 
-    d = sqrt(pow(x2-x1,2) + pow(y2-y1,2));
-    a = rad_to_deg(atan2(y2-y1,x2-x1)) + 90.0;
-    if (a < 0.0) a = a + 360.0;
+    mx = (x2 - x1) / 2 + x1;
+    my = (y2 - y1) / 2 + y1;
+    d = sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2));
+    a = rad_to_deg(atan2(y2 - y1, x2 - x1)) + 90.0;
+    if (a < 0.0)
+        a = a + 360.0;
 
     printf("\n\nDistance:\t%3.4fin %3.2fmm", d, d / 0.03937008);
     printf("\nAngle:   \t%3.1f deg", a);
+
+    wp = wheel_position(mx, my, dt);
+    printf("\n\nMidpoint: \tX = %3.4fin %3.2fmm   Y = %3.4fin %3.2fmm   %s", mx, mx / 0.03937008, my, my / 0.03937008, wp);
+    free_malloc(wp);
 }
 
 void abs_xy_wheel(double dt, int metric_flag)
@@ -571,74 +579,12 @@ void lookup_drill_size(double v)
     return;
 }
 
-int print_surrounding_fractions(double v, int dnom)
-{
-    double i, f, fl;
-    double om, ol, ex;
-    char *st = NULL;
-
-    v = fabs(v);
-
-    if (dnom == 0)
-        return FAIL_NUMBER;
-
-    f = modf(v, &i);
-    fl = round(f * dnom);
-
-    if (float_compare(fl, 0.0, 1e-6))
-        return SUCCESS;
-
-    sprintf_string(&st, "Nearest 1/%d Fractions: ", dnom);
-
-    printf("\n%25s", st);
-
-    free_malloc(st);
-
-    ol = (i + (fl - 1.0) / (double)dnom) - v;
-    ex = (i + fl / (double)dnom) - v;
-    om = (i + (fl + 1.0) / (double)dnom) - v;
-
-    fraction_int_string(&st, (int)i, (int)(fl - 1.0), dnom);
-    print_padded_string(st, 13);
-    free_malloc(st);
-
-    sprintf_string(&st, "(%3.4f)", ol);
-    print_padded_string(st, 15);
-    free_malloc(st);
-
-    fraction_int_string(&st, (int)i, (int)fl, dnom);
-    print_padded_string(st, 13);
-    free_malloc(st);
-
-    sprintf_string(&st, "(%3.4f)", ex);
-    print_padded_string(st, 15);
-    free_malloc(st);
-
-    fraction_int_string(&st, (int)i, (int)(fl + 1.0), dnom);
-    print_padded_string(st, 13);
-    free_malloc(st);
-
-    sprintf_string(&st, "(%3.4f)", om);
-    print_padded_string(st, 15);
-    free_malloc(st);
-
-    return SUCCESS;
-}
-
 void decimal_equivalence(int metric_flag)
 {
-    double v;
-    double f;
-    double mm;
-    double f64;
-    double nf;
-    double df;
-
-    int n, i;
-
-    fraction fract;
-    char *s = NULL;
-    size_t count;
+    double fract = 64.0;
+    double v, i, fl;
+    double s, e, f;
+    double step = 1 / fract;
 
     while (TRUE)
     {
@@ -650,23 +596,26 @@ void decimal_equivalence(int metric_flag)
         if (metric_flag)
             v = v * 0.03937008;
 
-        mm = v / 0.03937008;
-
         printf("\nInches: %3.4f", v);
-        printf("\nMM: %3.2f", mm);
+        printf("\nMM: %3.2f", v / 0.03937008);
         printf("\nExact Fraction: ");
         print_fraction_double(v);
-        printf("\n");
+        printf("\n\nNearby Fractions");
 
-        print_surrounding_fractions(v, 2);
-        print_surrounding_fractions(v, 4);
-        print_surrounding_fractions(v, 8);
-        print_surrounding_fractions(v, 10);
-        print_surrounding_fractions(v, 16);
-        print_surrounding_fractions(v, 32);
-        print_surrounding_fractions(v, 64);
-        print_surrounding_fractions(v, 100);
-        print_surrounding_fractions(v, 128);
+        f = modf(v, &i);
+        fl = round(f * fract);
+
+        s = (fl - 5) / fract;
+        e = (fl + 5) / fract;
+
+        if (s < 0)
+            s = 0;
+
+        for (f = s; f <= e; f += step)
+        {
+            printf("\n  (%3.4f)\t", f - v);
+            print_fraction_double(f);
+        }
 
         printf("\n\nStandard Drill Sizes +/- 5%%:\n");
         lookup_drill_size(v);
@@ -681,7 +630,7 @@ int main(void)
     double dt;
 
     printf("\n\n\n");
-    printf("\t\t\tManual Milling Suite v1.4");
+    printf("\t\t\tManual Milling Suite v1.5");
     printf("\n\n");
 
     print_layout();
@@ -708,7 +657,7 @@ int main(void)
             rel_xy_wheel(dt, metric_flag);
             break;
         case 4:
-            xy_distance_angle(metric_flag);
+            xy_distance_angle(dt, metric_flag);
             break;
         case 5:
             angle(dt, metric_flag);
