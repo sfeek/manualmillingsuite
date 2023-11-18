@@ -459,16 +459,14 @@ void angle(double dt, int metric_flag)
 
     radians = deg_to_rad(angle);
 
-    print_xy_position(x, y, dt, linecount);
-
     for (step = 0; step < steps; step++)
     {
+        print_xy_position(x, y, dt, linecount);
+
         x = x + inc * sin(radians);
         y = y - inc * cos(radians);
 
         linecount++;
-
-        print_xy_position(x, y, dt, linecount);
     }
 }
 
@@ -519,6 +517,7 @@ void radius(double dt, int metric_flag)
         centerxoffset = centerxoffset * MM;
         centeryoffset = centeryoffset * MM;
         arc_length = arc_length * MM;
+        tool_radius = tool_radius * MM;
     }
 
     angleinc = arc_length / (PI * radius) * 360.0;
@@ -539,9 +538,9 @@ void radius(double dt, int metric_flag)
         x = centerxoffset + radius * sin(radians);
         y = centeryoffset - radius * cos(radians);
 
-        linecount++;
-
         print_xy_position(x, y, dt, linecount);
+
+        linecount++;
     }
 }
 
@@ -597,7 +596,7 @@ void lookup_drill_size(double v)
             sscanf(line, "%lf,%s", &value, sz);
             if (value >= (v - v * 0.05) && value <= (v + v * 0.05))
             {
-                printf("  %3.4f : %s (%3.4f)\n", value, sz, value - v);
+                printf("  %3.4f  %s  (%3.4f)\n", value, sz, value - v);
                 flag = 0;
             }
         }
