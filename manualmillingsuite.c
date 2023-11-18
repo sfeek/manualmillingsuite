@@ -32,17 +32,18 @@ int print_menu(int metric_flag)
 
     printf("\n\n\n\n\t\t*** Main Menu ***\n");
 
-    printf("\n\t<1> Distance to Wheel Turns");
-    printf("\n\t<2> Wheel turns to Distance");
-    printf("\n\t<3> Absolute X,Y to Wheel Turns");
-    printf("\n\t<4> Relative Distance & Angle to Absolute X,Y");
-    printf("\n\t<5> Absolute X1,Y1 & X2,Y2 to Distance & Angle");
-    printf("\n\t<6> Angle");
-    printf("\n\t<7> Radius");
-    printf("\n\t<8> Manifold");
-    printf("\n\t<9> Decimal Equivalent");
+    printf("\n\t<1>  Distance to Wheel Turns");
+    printf("\n\t<2>  Wheel turns to Distance");
+    printf("\n\t<3>  Absolute X,Y to Wheel Turns");
+    printf("\n\t<4>  Relative Distance & Angle to Absolute X,Y");
+    printf("\n\t<5>  Absolute X1,Y1 & X2,Y2 to Distance & Angle");
+    printf("\n\t<6>  Angle");
+    printf("\n\t<7>  Radius");
+    printf("\n\t<8>  Manifold");
+    printf("\n\t<9>  Decimal Equivalent");
     printf("\n\t<10> Tap Drill Size");
-    printf("\n\t<11> Choose Inches or Millimeters");
+    printf("\n\t<11> Countersink Z Distance");
+    printf("\n\t<12> Choose Inches or Millimeters");
     if (metric_flag)
         printf(" (Currently Millimeters)");
     else
@@ -53,7 +54,7 @@ int print_menu(int metric_flag)
     do
     {
         choice = get_int("\n\nEnter Selection: ");
-    } while (choice < 0 || choice > 11);
+    } while (choice < 0 || choice > 12);
 
     return choice;
 }
@@ -710,13 +711,30 @@ void decimal_equivalent(int metric_flag)
     }
 }
 
+void countersink(int metric_flag)
+{
+    double d,a,t,z;
+
+    d = fabs(get_fraction("\nEnter Countersink Diameter: "));
+    a = double_mod(fabs(get_fraction("\nEnter Countersink Angle: ")),360.0);
+
+    if (metric_flag)
+        d = d * MM;
+
+    a = deg_to_rad(a);
+
+    z = (d/2.0)*(1.0/tan(a/2));
+
+    printf("\n\nZ Depth: %3.4fin  %3.2fmm", z, z/MM);
+}
+
 int main(void)
 {
     int choice, metric_flag = 0;
     double dt;
 
     printf("\n\n\n");
-    printf("\t\t\tManual Milling Suite v1.5");
+    printf("\t\t\tManual Milling Suite v1.6");
     printf("\n\n");
 
     print_layout();
@@ -763,7 +781,10 @@ int main(void)
         case 10:
             tap_drill_size(metric_flag);
             break;
-        case 11:
+        case 11:    
+            countersink(metric_flag);
+            break;
+        case 12:
             metric_flag = get_english_or_metric();
             break;
         }
