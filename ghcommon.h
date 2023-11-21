@@ -60,6 +60,7 @@ double mod(double a, double m);
 double normalize_angle_360(double);
 double normalize_angle_180(double);
 int angle_in_range(double, double, double);
+double distance(double,double,double,double);
 
 fraction decimal_to_fraction(double, double);
 double fraction_to_decimal(fraction);

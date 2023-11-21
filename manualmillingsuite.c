@@ -4,6 +4,7 @@
 #include "ghcommon.h"
 
 #define MM 0.03937008
+#define M 3.2808399
 
 double double_mod(double a, double b)
 {
@@ -26,7 +27,7 @@ double double_mod(double a, double b)
     return mod;
 }
 
-int print_menu(int metric_flag)
+int print_main_menu(int metric_flag)
 {
     int choice;
 
@@ -40,10 +41,12 @@ int print_menu(int metric_flag)
     printf("\n\t<6>  Angle");
     printf("\n\t<7>  Radius");
     printf("\n\t<8>  Manifold");
-    printf("\n\t<9>  Decimal Equivalent");
-    printf("\n\t<10> Tap Drill Size");
-    printf("\n\t<11> Countersink Z Distance");
-    printf("\n\t<12> Choose Inches or Millimeters");
+    printf("\n\t<9>  Ellipse");
+    printf("\n\t<10> Decimal Equivalent");
+    printf("\n\t<11> Tap Drill Size");
+    printf("\n\t<12> Countersink Z Distance");
+    printf("\n\t<13> Speeds & Feeds");
+    printf("\n\t<14> Choose Inches or Millimeters");
     if (metric_flag)
         printf(" (Currently Millimeters)");
     else
@@ -54,7 +57,35 @@ int print_menu(int metric_flag)
     do
     {
         choice = get_int("\n\nEnter Selection: ");
-    } while (choice < 0 || choice > 12);
+    } while (choice < 0 || choice > 14);
+
+    return choice;
+}
+
+int print_speeds_feeds_menu(int metric_flag)
+{
+    int choice;
+
+    printf("\n\n\n\n\t\t*** Speed and Feeds Menu ***\n");
+
+    printf("\n\t<1>  Speed");
+    printf("\n\t<2>  Feed");
+    if (metric_flag)
+        printf("\n\t<3>  Surface Meters per Minute");
+    else
+        printf("\n\t<3>  Surface Feet per Minute");
+    if (metric_flag)
+        printf("\n\t<4>  Millimeters per Tooth");
+    else
+        printf("\n\t<4>  Inches per Tooth");
+    printf("\n\t<5>  Material Removal Rate");
+
+    printf("\n\n\t<0> Main Menu");
+
+    do
+    {
+        choice = get_int("\n\nEnter Selection: ");
+    } while (choice < 0 || choice > 5);
 
     return choice;
 }
@@ -222,6 +253,7 @@ int get_lcr(void)
 void xy_distance_angle(double dt, int metric_flag)
 {
     double x1, y1, x2, y2, d, a, mx, my;
+    double xd,yd;
     char *wp = NULL;
 
     x1 = fabs(get_fraction("\nEnter X1 Position: "));
@@ -244,8 +276,14 @@ void xy_distance_angle(double dt, int metric_flag)
     if (a < 0.0)
         a = a + 360.0;
 
+    xd = fabs(x2-x1);
+    yd = fabs(y2-y1);
+
     printf("\n\nDistance:\t%3.4fin %3.2fmm", d, d / MM);
-    printf("\nAngle:   \t%3.1f deg", a);
+    printf("\n\nX Difference:\t%3.4fin %3.2fmm", xd,xd / MM);
+    printf("\nY Difference:\t%3.4fin %3.2fmm", yd,yd / MM);
+
+    printf("\n\nAngle:   \t%3.1f deg", a);
 
     wp = wheel_position(mx, my, dt);
     printf("\n\nMidpoint: \tX = %3.4fin %3.2fmm   Y = %3.4fin %3.2fmm   %s", mx, mx / MM, my, my / MM, wp);
@@ -285,7 +323,7 @@ void distance_wheel(double dt, int metric_flag)
     xt = (int)trunc(d / dt);
     xr = abs((int)round((d / dt - xt) * dt * 1000));
 
-    printf("\n\nWheel Position: (%dT + %d)", xt, xr);
+    printf("\n\nWheel Position:\t(%dT + %d)", xt, xr);
 }
 
 void wheel_distance(double dt, int metric_flag)
@@ -521,7 +559,7 @@ void radius(double dt, int metric_flag)
         tool_radius = tool_radius * MM;
     }
 
-    angleinc = arc_length / (PI * radius) * 360.0;
+    angleinc = (arc_length / (PI * radius)) * 360.0;
 
     if (c == 0)
         radius -= tool_radius;
@@ -626,15 +664,15 @@ void tap_drill_size(int metric_flag)
 
         td = d - (hp * p) / 76.98;
 
-        printf("\n\n  Tap Drill Size: %3.2f\n", td);
+        printf("\n\nTap Drill Size:\t%3.2f\n", td);
 
         if (hd > 0.0)
         {
             maxhole = (hd + d) / 2.0;
-            printf("\n  Min Clearance Hole: %3.4f", d);
-            printf("\n  Tight Fit Clearance Hole: %3.4f", (maxhole - d) * 0.125 + d);
-            printf("\n  Normal Fit Clearance Hole: %3.4f", (maxhole - d) * 0.25 + d);
-            printf("\n  Max Clearance Hole: %3.4f", maxhole);
+            printf("\nMin Clearance Hole:\t\t%3.4f", d);
+            printf("\nTight Fit Clearance Hole:\t%3.4f", (maxhole - d) * 0.125 + d);
+            printf("\nNormal Fit Clearance Hole:\t%3.4f", (maxhole - d) * 0.25 + d);
+            printf("\nMax Clearance Hole:\t\t%3.4f", maxhole);
         }
     }
     else
@@ -652,15 +690,15 @@ void tap_drill_size(int metric_flag)
 
         td = d - hp / (76.98 * tpi);
 
-        printf("\n\n  Tap Drill Size: %3.4f\n", td);
+        printf("\n\nTap Drill Size:\t%3.4f\n", td);
 
         if (hd > 0.0)
         {
             maxhole = (hd + d) / 2.0;
-            printf("\n  Min Clearance Hole: %3.4f", d);
-            printf("\n  Tight Fit Clearance Hole: %3.4f", (maxhole - d) * 0.125 + d);
-            printf("\n  Normal Fit Clearance Hole: %3.4f", (maxhole - d) * 0.25 + d);
-            printf("\n  Max Clearance Hole: %3.4f", maxhole);
+            printf("\nMin Clearance Hole:\t\t%3.4f", d);
+            printf("\nTight Fit Clearance Hole:\t%3.4f", (maxhole - d) * 0.125 + d);
+            printf("\nNormal Fit Clearance Hole:\t%3.4f", (maxhole - d) * 0.25 + d);
+            printf("\nMax Clearance Hole:\t\t%3.4f", maxhole);
         }
     }
 }
@@ -713,19 +751,289 @@ void decimal_equivalent(int metric_flag)
 
 void countersink(int metric_flag)
 {
-    double d,a,t,z;
+    double d, a, t, z;
 
     d = fabs(get_fraction("\nEnter Countersink Diameter: "));
-    a = double_mod(fabs(get_fraction("\nEnter Countersink Angle: ")),360.0);
+    a = double_mod(fabs(get_fraction("\nEnter Countersink Angle: ")), 360.0);
 
     if (metric_flag)
         d = d * MM;
 
     a = deg_to_rad(a);
 
-    z = (d/2.0)*(1.0/tan(a/2));
+    z = (d / 2.0) * (1.0 / tan(a / 2.0));
 
-    printf("\n\nZ Depth: %3.4fin  %3.2fmm", z, z/MM);
+    printf("\n\nZ Depth:\t%3.4fin  %3.2fmm", z, z / MM);
+}
+
+void ellipse(double dt, int metric_flag)
+{
+    double major_radius;
+    double minor_radius;
+    double foci;
+    double rotation_angle;
+    double tool_radius;
+    double centerxoffset;
+    double centeryoffset;
+    double startangle;
+    double endangle;
+    double a;
+    double angleinc;
+    double x, x0;
+    double y, y0;
+    double radians;
+    double r_radians;
+    double arc_length;
+    int linecount;
+    int c;
+
+    c = get_inside_outside();
+
+    do
+    {
+        do
+        {
+            major_radius = fabs(get_fraction("\nEnter Major Radius: "));
+            minor_radius = fabs(get_fraction("\nEnter Minor Radius: "));
+        } while (major_radius < minor_radius);
+
+        foci = major_radius - sqrt(major_radius * major_radius - minor_radius * minor_radius);
+        if (c == 0)
+            printf("\n\nMax Tool Diameter: %3.4fin  %3.2fmm\n\n", foci, foci / MM);
+        tool_radius = fabs(get_fraction("\nEnter Tool Diameter: ") / 2.0);
+    } while ((c == 0) && (foci < tool_radius));
+
+    rotation_angle = double_mod(get_fraction("\nEnter Rotation Angle of Minor Axis: "), 360.0);
+    arc_length = fabs(get_fraction("\nEnter Step Arc Length: "));
+
+    centerxoffset = fabs(get_fraction("\nEnter Center X: "));
+    centeryoffset = fabs(get_fraction("\nEnter Center Y: "));
+
+    startangle = double_mod(get_fraction("\nEnter Start Angle: "), 360.0);
+    endangle = double_mod(get_fraction("\nEnter End Angle: "), 360.0);
+
+    if (endangle == 0.0)
+        endangle = 360.0;
+
+    if (endangle < startangle)
+    {
+        endangle = endangle + 360.0;
+    }
+
+    if (metric_flag)
+    {
+        major_radius = major_radius * MM;
+        minor_radius = minor_radius * MM;
+        centerxoffset = centerxoffset * MM;
+        centeryoffset = centeryoffset * MM;
+        arc_length = arc_length * MM;
+        tool_radius = tool_radius * MM;
+    }
+
+    if (c == 0)
+    {
+        major_radius -= tool_radius;
+        minor_radius -= tool_radius;
+    }
+    else
+    {
+        major_radius += tool_radius;
+        minor_radius += tool_radius;
+    }
+
+    linecount = 0;
+
+    r_radians = deg_to_rad(360.0 - double_mod(rotation_angle, 360.0));
+
+    x = 0.0;
+    y = 0.0;
+
+    for (a = startangle; a <= endangle; a += 0.001)
+    {
+        radians = deg_to_rad(a);
+
+        x0 = centerxoffset + (major_radius * cos(radians) * cos(r_radians) - minor_radius * sin(radians) * sin(r_radians));
+        y0 = centeryoffset - (major_radius * cos(radians) * sin(r_radians) + minor_radius * sin(radians) * cos(r_radians));
+
+        if (distance(x, y, x0, y0) >= arc_length)
+        {
+            print_xy_position(x0, y0, dt, linecount);
+            x = x0;
+            y = y0;
+            linecount++;
+        }
+    }
+}
+
+void speed(int metric_flag)
+{
+    double speed, sfm, d = 0.0;
+
+    if (metric_flag)
+    {
+        sfm = fabs(get_fraction("\nEnter Surface Meters Per Minute: ")) * 3.2808399;
+        do
+        {
+            d = fabs(get_fraction("\nEnter Tool Diameter: ")) * MM;
+        } while (d == 0.0);
+
+        speed = (sfm * 3.82) / d;
+        printf("\n\nSpeed (RPM):\t%3.0f", speed);
+    }
+    else
+    {
+        sfm = fabs(get_fraction("\nEnter Surface Feet Per Minute: "));
+        do
+        {
+            d = fabs(get_fraction("\nEnter Tool Diameter: "));
+        } while (d == 0.0);
+
+        speed = (sfm * 3.82) / d;
+        printf("\n\nSpeed (RPM):\t%3.0f", speed);
+    }
+}
+
+void feed(int metric_flag)
+{
+    double feed, z, fpt, rpm;
+
+    if (metric_flag)
+    {
+        rpm = fabs(get_double("\nEnter RPM: "));
+        z = fabs((double)get_int("\nEnter # of Teeth: "));
+        fpt = fabs(get_fraction("\nEnter Feed per Tooth: "));
+
+        feed = rpm * z * fpt;
+        printf("\n\nFeed (MMPM):\t%3.1f", feed);
+    }
+    else
+    {
+        rpm = fabs(get_double("\nEnter RPM: "));
+        z = fabs((double)get_int("\nEnter # of Teeth: "));
+        fpt = fabs(get_fraction("\nEnter Feed per Tooth: "));
+
+        feed = rpm * z * fpt;
+        printf("\n\nFeed (IPM):\t%3.1f", feed);
+    }
+}
+
+void surface(int metric_flag)
+{
+    double rpm, d, sfm, smm;
+
+    if (metric_flag)
+    {
+        rpm = fabs(get_double("\nEnter RPM: "));
+        d = fabs(get_fraction("\nEnter Tool Diameter: "));
+
+        smm = ((rpm * d * MM) / 3.82) * 0.3048;
+        printf("\n\nSurface Meters per Minute:\t%3.3f", smm);
+    }
+    else
+    {
+        rpm = fabs(get_double("\nEnter RPM: "));
+        d = fabs(get_fraction("\nEnter Tool Diameter: "));
+
+        sfm = (rpm * d) / 3.82;
+        printf("\n\nSurface Feet per Minute:\t%3.1f", sfm);
+    }
+}
+
+void tooth(int metric_flag)
+{
+    double rpm = 0.0, ipm, mpm, z = 0.0, ipt, mmpt;
+
+    if (metric_flag)
+    {
+        do
+        {
+            rpm = fabs(get_fraction("\nEnter RPM: "));
+        } while (rpm == 0.0);
+
+        mpm = fabs(get_fraction("\nEnter Feed Rate in Millimeters per Minute: "));
+
+        do
+        {
+            z = fabs((double)get_int("\nEnter # of Teeth: "));
+        } while (z == 0.0);
+
+        mmpt = (mpm / rpm) / z;
+
+        printf("\n\nMillimeters per Tooth:\t%3.2f", mmpt);
+    }
+    else
+    {
+        do
+        {
+            rpm = fabs(get_fraction("\nEnter RPM: "));
+        } while (rpm == 0.0);
+
+        ipm = fabs(get_fraction("\nEnter Feed Rate in Inches per Minute: "));
+
+        do
+        {
+            z = fabs((double)get_int("\nEnter # of Teeth: "));
+        } while (z == 0.0);
+
+        ipt = (ipm / rpm) / z;
+
+        printf("\n\nInches per Tooth:\t%3.4f", ipt);
+    }
+}
+
+void material_removal(int metric_flag)
+{
+    double ipm, woc, doc;
+
+    if (metric_flag)
+    {
+        ipm = fabs(get_fraction("\nEnter Feed Rate in Millimeters per Minute: "));
+        woc = fabs(get_fraction("\nEnter Width of Cut: "));
+        doc = fabs(get_fraction("\nEnter Depth of Cut: "));
+
+        printf("\n\nMaterial Removal in Cubic Millimeters per Minute:\t%3.1f", ipm * woc * doc);
+    }
+    else
+    {
+        ipm = fabs(get_fraction("\nEnter Feed Rate in Inches per Minute: "));
+        woc = fabs(get_fraction("\nEnter Width of Cut: "));
+        doc = fabs(get_fraction("\nEnter Depth of Cut: "));
+
+        printf("\n\nMaterial Removal in Cubic Inches per Minute:\t%3.3f", ipm * woc * doc);
+    }
+}
+
+int speeds_feeds(int metric_flag)
+{
+    int choice;
+
+    while (TRUE)
+    {
+        choice = print_speeds_feeds_menu(metric_flag);
+
+        printf("\n\n");
+
+        switch (choice)
+        {
+        case 0:
+            return SUCCESS;
+        case 1:
+            speed(metric_flag);
+            break;
+        case 2:
+            feed(metric_flag);
+            break;
+        case 3:
+            surface(metric_flag);
+            break;
+        case 4:
+            tooth(metric_flag);
+            break;
+        case 5:
+            material_removal(metric_flag);
+            break;
+        }
+    }
 }
 
 int main(void)
@@ -743,7 +1051,7 @@ int main(void)
 
     while (TRUE)
     {
-        choice = print_menu(metric_flag);
+        choice = print_main_menu(metric_flag);
 
         printf("\n\n");
 
@@ -776,15 +1084,21 @@ int main(void)
             manifold(dt, metric_flag);
             break;
         case 9:
-            decimal_equivalent(metric_flag);
+            ellipse(dt, metric_flag);
             break;
         case 10:
+            decimal_equivalent(metric_flag);
+            break;
+        case 11:
             tap_drill_size(metric_flag);
             break;
-        case 11:    
+        case 12:
             countersink(metric_flag);
             break;
-        case 12:
+        case 13:
+            speeds_feeds(metric_flag);
+            break;
+        case 14:
             metric_flag = get_english_or_metric();
             break;
         }
