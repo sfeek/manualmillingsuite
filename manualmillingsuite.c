@@ -43,7 +43,7 @@ int print_main_menu(int metric_flag)
     printf("\n\t<8>  Manifold");
     printf("\n\t<9>  Ellipse");
     printf("\n\t<10> Decimal Equivalent");
-    printf("\n\t<11> Tap Drill Size");
+    printf("\n\t<11> Tap Drill and Clearance Hole Size");
     printf("\n\t<12> Countersink Z Distance");
     printf("\n\t<13> Speeds & Feeds");
     printf("\n\t<14> Choose Inches or Millimeters");
@@ -253,7 +253,7 @@ int get_lcr(void)
 void xy_distance_angle(double dt, int metric_flag)
 {
     double x1, y1, x2, y2, d, a, mx, my;
-    double xd,yd;
+    double xd, yd;
     char *wp = NULL;
 
     x1 = fabs(get_fraction("\nEnter X1 Position: "));
@@ -276,12 +276,13 @@ void xy_distance_angle(double dt, int metric_flag)
     if (a < 0.0)
         a = a + 360.0;
 
-    xd = fabs(x2-x1);
-    yd = fabs(y2-y1);
+    xd = fabs(x2 - x1);
+    yd = fabs(y2 - y1);
 
     printf("\n\nDistance:\t%3.4fin %3.2fmm", d, d / MM);
-    printf("\n\nX Difference:\t%3.4fin %3.2fmm", xd,xd / MM);
-    printf("\nY Difference:\t%3.4fin %3.2fmm", yd,yd / MM);
+
+    printf("\n\nX Difference:\t%3.4fin %3.2fmm", xd, xd / MM);
+    printf("\nY Difference:\t%3.4fin %3.2fmm", yd, yd / MM);
 
     printf("\n\nAngle:   \t%3.1f deg", a);
 
@@ -323,7 +324,9 @@ void distance_wheel(double dt, int metric_flag)
     xt = (int)trunc(d / dt);
     xr = abs((int)round((d / dt - xt) * dt * 1000));
 
-    printf("\n\nWheel Position:\t(%dT + %d)", xt, xr);
+    wp = wheel_position(xt, xr, dt);
+    printf("\n\nWheel Position:\t%s", wp);
+    free_malloc(wp);
 }
 
 void wheel_distance(double dt, int metric_flag)
@@ -429,7 +432,7 @@ void manifold(double dt, int metric_flag)
 
     for (a = startangle; a < endangle; a += angleinc)
     {
-        radians = PI * a / 180.0;
+        radians = deg_to_rad(a);
 
         x = centerxoffset + radius * sin(radians);
         y = centeryoffset - radius * cos(radians);
@@ -566,7 +569,7 @@ void radius(double dt, int metric_flag)
     else
         radius += tool_radius;
 
-    printf("\n\nAngle Increment = %3.1f deg", angleinc);
+    printf("\n\nAngle Increment:\t%3.1f deg", angleinc);
 
     linecount = 0;
 
@@ -799,7 +802,7 @@ void ellipse(double dt, int metric_flag)
 
         foci = major_radius - sqrt(major_radius * major_radius - minor_radius * minor_radius);
         if (c == 0)
-            printf("\n\nMax Tool Diameter: %3.4fin  %3.2fmm\n\n", foci, foci / MM);
+            printf("\n\nMax Tool Diameter:\t%3.4fin  %3.2fmm\n\n", foci, foci / MM);
         tool_radius = fabs(get_fraction("\nEnter Tool Diameter: ") / 2.0);
     } while ((c == 0) && (foci < tool_radius));
 
@@ -858,8 +861,10 @@ void ellipse(double dt, int metric_flag)
         if (distance(x, y, x0, y0) >= arc_length)
         {
             print_xy_position(x0, y0, dt, linecount);
+
             x = x0;
             y = y0;
+
             linecount++;
         }
     }
@@ -1042,7 +1047,7 @@ int main(void)
     double dt;
 
     printf("\n\n\n");
-    printf("\t\t\tManual Milling Suite v1.6");
+    printf("\t\t\tManual Milling Suite v1.8");
     printf("\n\n");
 
     print_layout();
