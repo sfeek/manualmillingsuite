@@ -314,7 +314,6 @@ void distance_wheel(double dt, int metric_flag)
 {
     double d;
     int xt, xr;
-    char *wp = NULL;
 
     d = fabs(get_fraction("\nEnter Distance: "));
 
@@ -324,9 +323,7 @@ void distance_wheel(double dt, int metric_flag)
     xt = (int)trunc(d / dt);
     xr = abs((int)round((d / dt - xt) * dt * 1000));
 
-    wp = wheel_position(xt, xr, dt);
-    printf("\n\nWheel Position:\t%s", wp);
-    free_malloc(wp);
+    printf("\n\nWheel Position:\t%dT + %d", xt,xr);
 }
 
 void wheel_distance(double dt, int metric_flag)
