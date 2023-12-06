@@ -6,6 +6,8 @@
 #include <math.h>
 #endif
 
+#include <math.h>
+
 int append_string(char **s1, char *s2)
 {
 	char *t;
