@@ -40,7 +40,7 @@ int print_main_menu(int metric_flag)
     printf("\n\t<5>  Absolute X1,Y1 & X2,Y2 to Distance & Angle");
     printf("\n\t<6>  Angle");
     printf("\n\t<7>  Radius");
-    printf("\n\t<8>  Manifold");
+    printf("\n\t<8>  Hole Circle");
     printf("\n\t<9>  Ellipse");
     printf("\n\t<10> Decimal Equivalent");
     printf("\n\t<11> Tap Drill and Clearance Hole Size");
@@ -672,6 +672,7 @@ void tap_drill_size(int metric_flag)
             printf("\nMin Clearance Hole:\t\t%3.4f", d);
             printf("\nTight Fit Clearance Hole:\t%3.4f", (maxhole - d) * 0.125 + d);
             printf("\nNormal Fit Clearance Hole:\t%3.4f", (maxhole - d) * 0.25 + d);
+            printf("\nLoose Fit Clearance Hole:\t%3.4f", (maxhole - d) * 0.50 + d);
             printf("\nMax Clearance Hole:\t\t%3.4f", maxhole);
         }
     }
@@ -698,6 +699,7 @@ void tap_drill_size(int metric_flag)
             printf("\nMin Clearance Hole:\t\t%3.4f", d);
             printf("\nTight Fit Clearance Hole:\t%3.4f", (maxhole - d) * 0.125 + d);
             printf("\nNormal Fit Clearance Hole:\t%3.4f", (maxhole - d) * 0.25 + d);
+            printf("\nLoose Fit Clearance Hole:\t%3.4f", (maxhole - d) * 0.50 + d);
             printf("\nMax Clearance Hole:\t\t%3.4f", maxhole);
         }
     }
@@ -1044,7 +1046,7 @@ int main(void)
     double dt;
 
     printf("\n\n\n");
-    printf("\t\t\tManual Milling Suite v1.8");
+    printf("\t\t\tManual Milling Suite v1.85");
     printf("\n\n");
 
     print_layout();
