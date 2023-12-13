@@ -40,7 +40,7 @@ int print_main_menu(int metric_flag)
     printf("\n\t<5>  Absolute X1,Y1 & X2,Y2 to Distance & Angle");
     printf("\n\t<6>  Angle");
     printf("\n\t<7>  Radius");
-    printf("\n\t<8>  Hole Circle");
+    printf("\n\t<8>  Bolt Hole Circle");
     printf("\n\t<9>  Ellipse");
     printf("\n\t<10> Decimal Equivalent");
     printf("\n\t<11> Tap Drill and Clearance Hole Size");
@@ -390,7 +390,7 @@ void rel_xy_wheel(double dt, int metric_flag)
     }
 }
 
-void manifold(double dt, int metric_flag)
+void bolt_hole_circle(double dt, int metric_flag)
 {
     double radius;
     double centerxoffset;
@@ -405,7 +405,7 @@ void manifold(double dt, int metric_flag)
     int linecount;
     int nh;
 
-    radius = fabs(get_fraction("\nEnter Radius: "));
+    radius = fabs(get_fraction("\nEnter Circle Diameter: ")) / 2.0;
     nh = get_int("\nEnter Number of Holes: ");
 
     if (nh < 1)
@@ -1085,7 +1085,7 @@ int main(void)
             radius(dt, metric_flag);
             break;
         case 8:
-            manifold(dt, metric_flag);
+            bolt_hole_circle(dt, metric_flag);
             break;
         case 9:
             ellipse(dt, metric_flag);
