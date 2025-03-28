@@ -46,7 +46,9 @@ int print_main_menu(int metric_flag)
     printf("\n\t<11> Tap Drill and Clearance Hole Size");
     printf("\n\t<12> Countersink Z Distance");
     printf("\n\t<13> Speeds & Feeds");
-    printf("\n\t<14> Choose Inches or Millimeters");
+    printf("\n\t<14> Dividing Head");
+    printf("\n\t<15> Choose Inches or Millimeters");
+
     if (metric_flag)
         printf(" (Currently Millimeters)");
     else
@@ -57,7 +59,7 @@ int print_main_menu(int metric_flag)
     do
     {
         choice = get_int("\n\nEnter Selection: ");
-    } while (choice < 0 || choice > 14);
+    } while (choice < 0 || choice > 15);
 
     return choice;
 }
@@ -323,7 +325,7 @@ void distance_wheel(double dt, int metric_flag)
     xt = (int)trunc(d / dt);
     xr = abs((int)round((d / dt - xt) * dt * 1000));
 
-    printf("\n\nWheel Position:\t%dT + %d", xt,xr);
+    printf("\n\nWheel Position:\t%dT + %d", xt, xr);
 }
 
 void wheel_distance(double dt, int metric_flag)
@@ -1040,6 +1042,32 @@ int speeds_feeds(int metric_flag)
     }
 }
 
+void dividing_head()
+{
+    double wgr;
+    int h, hp;
+    int d;
+    int maxp;
+    double i;
+    double f;
+    double t;
+
+    wgr = get_double("\nEnter Worm Gear Ratio (X:1): ");
+    maxp = get_int("\nEnter maxium plate hole count: ");
+    d = get_int("\nEnter # of divisions: ");
+    printf("\n\n");
+
+    if (maxp < 1) return;
+
+    for (hp = 1; hp <= maxp; hp++)
+    {
+        t = wgr / d;
+        f = modf(t, &i) * hp;
+
+        if (float_compare(floorf(f), f, 1E-4) == TRUE) printf("\nPlate %d - %0.fT + %0.fH", hp, i, f);
+    }
+}
+
 int main(void)
 {
     int choice, metric_flag = 0;
@@ -1103,6 +1131,9 @@ int main(void)
             speeds_feeds(metric_flag);
             break;
         case 14:
+            dividing_head();
+            break;
+        case 15:
             metric_flag = get_english_or_metric();
             break;
         }
