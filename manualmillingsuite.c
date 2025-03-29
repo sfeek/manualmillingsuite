@@ -1055,7 +1055,8 @@ void dividing_head()
     wgr = get_double("\nEnter Worm Gear Ratio (X:1): ");
     maxp = get_int("\nEnter maxium plate hole count: ");
     d = get_int("\nEnter # of divisions: ");
-    printf("\n\n");
+
+    printf("\n\nAngle: %0.2f", 360.0 / d);
 
     if (maxp < 1) return;
 
@@ -1137,5 +1138,7 @@ int main(void)
             metric_flag = get_english_or_metric();
             break;
         }
+
+        pause_for_enter("\n\n<Enter> to return to the Main Menu");
     }
 }
