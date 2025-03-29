@@ -1056,7 +1056,7 @@ void dividing_head()
     maxp = get_int("\nEnter maxium plate hole count: ");
     d = get_int("\nEnter # of divisions: ");
 
-    printf("\n\nAngle: %0.2f", 360.0 / d);
+    printf("\n\nAngle: %0.2f\n", 360.0 / d);
 
     if (maxp < 1) return;
 
@@ -1065,7 +1065,7 @@ void dividing_head()
         t = wgr / d;
         f = modf(t, &i) * hp;
 
-        if (float_compare(floorf(f), f, 1E-4) == TRUE) printf("\nPlate %d - %0.fT + %0.fH", hp, i, f);
+        if (float_compare(floorf(f), f, 1E-4) == TRUE) printf("\nPlate %d:\t %0.fT + %0.fH", hp, i, f);
     }
 }
 
