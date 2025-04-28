@@ -1065,7 +1065,19 @@ void dividing_head()
         t = wgr / d;
         f = modf(t, &i) * hp;
 
-        if (float_compare(floorf(f), f, 1E-4) == TRUE) printf("\nPlate %d:\t %0.fT + %0.fH", hp, i, f);
+        if (float_compare(floorf(f), f, 1E-4) == TRUE) 
+        {
+            if (float_compare(f,0.0,1E-4)) 
+            {
+                printf("\nPlate ANY:\t %0.fT", i);
+                break;
+            }
+            else
+            {
+                printf("\nPlate %d:\t %0.fT + %0.fH", hp, i, f);
+            }
+        }
+    
     }
 }
 
