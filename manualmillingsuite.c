@@ -147,7 +147,7 @@ int get_english_or_metric(void)
 
     while (TRUE)
     {
-        count = get_string(&s, "\n\nEnter <I>nches or <M>illimeters:  ");
+        count = get_string(&s, "\n\nEnter <I>nches or <M>illimeters: ");
 
         if (count == 0)
         {
