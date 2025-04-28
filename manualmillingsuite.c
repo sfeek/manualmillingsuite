@@ -147,7 +147,7 @@ int get_english_or_metric(void)
 
     while (TRUE)
     {
-        count = get_string(&s, "\n\nEnter <I>nches or <M>illimeters: ");
+        count = get_string(&s, "\n\nEnter <I>nches or <M>illimeters:  ");
 
         if (count == 0)
         {
@@ -1058,16 +1058,17 @@ void dividing_head()
 
     printf("\n\nAngle: %0.2f\n", 360.0 / d);
 
-    if (maxp < 1) return;
+    if (maxp < 1)
+        return;
 
     for (hp = 1; hp <= maxp; hp++)
     {
         t = wgr / d;
         f = modf(t, &i) * hp;
 
-        if (float_compare(floorf(f), f, 1E-4) == TRUE) 
+        if (float_compare(floorf(f), f, 1E-4) == TRUE)
         {
-            if (float_compare(f,0.0,1E-4)) 
+            if (float_compare(f, 0.0, 1E-4))
             {
                 printf("\nPlate ANY:\t %0.fT", i);
                 break;
@@ -1077,7 +1078,6 @@ void dividing_head()
                 printf("\nPlate %d:\t %0.fT + %0.fH", hp, i, f);
             }
         }
-    
     }
 }
 
