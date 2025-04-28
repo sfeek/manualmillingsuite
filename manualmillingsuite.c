@@ -136,6 +136,8 @@ void print_layout(void)
     printf("\n  ---------------");
 
     printf("\n\n Always reference back left corner as 0,0");
+    printf("\n\n Fractions are allowed for numeric fields");
+
 
     printf("\n\n\n");
 }
@@ -159,6 +161,7 @@ int get_english_or_metric(void)
         {
             free_malloc(s);
             metric_flag = FALSE;
+            printf("\nChanged to Inches");
             break;
         }
 
@@ -166,6 +169,7 @@ int get_english_or_metric(void)
         {
             free_malloc(s);
             metric_flag = TRUE;
+            printf("\nChanged to Millimeters");
             break;
         }
 
@@ -361,7 +365,7 @@ void rel_xy_wheel(double dt, int metric_flag)
 
     while (TRUE)
     {
-        d = fabs(get_fraction("\n\n\nEnter Distance (0 to Return to Menu): "));
+        d = fabs(get_fraction("\n\n\nEnter Distance (0 to Quit): "));
         if (d <= 0.0)
             break;
 
@@ -716,7 +720,7 @@ void decimal_equivalent(int metric_flag)
 
     while (TRUE)
     {
-        v = fabs(get_fraction("\nEnter a decimal or fractional number (0 to Return to Menu): "));
+        v = fabs(get_fraction("\nEnter a decimal or fractional number (0 to Quit): "));
 
         if (v == 0.0)
             return;
