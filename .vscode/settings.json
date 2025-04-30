@@ -1,5 +1,9 @@
 {
     "files.associations": {
-        "cmath": "c"
+        "cmath": "c",
+        "iterator": "c",
+        "xmemory": "c",
+        "xutility": "c",
+        "ghcommon.h": "c"
     }
 }
